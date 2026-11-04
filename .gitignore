@@ -1,0 +1,34 @@
+# Python Bytecode & Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Multi-Tenant SQLite Databases & Auth Secrets
+*.db
+*.db-shm
+*.db-wal
+user_data/
+.jwt_secret
+
+# Headless Browser Profiles & Caches
+chrome_scraper_profile/
+
+# Logs & Temporary Files
+*.log
+*.tmp
+*.temp
+*.bak
+
+# OS & IDE Settings
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace

@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalog Studio — E-Commerce Scraping & Spreadsheet Platform</title>
+
+  <!-- Typography: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              DEFAULT: '#0F172A',
+              hover: '#1E293B',
+              accent: '#2563EB',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #FAFAFA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #F1F5F9; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+    .sheet-cell {
+      min-width: 140px;
+      max-width: 260px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .sheet-cell:focus {
+      outline: 2px solid #0F172A;
+      background: #FFFFFF;
+      white-space: normal;
+      overflow: visible;
+      z-index: 20;
+      position: relative;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #0F172A;
+      box-shadow: 0 0 0 1px #0F172A;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex text-slate-900 bg-[#FAFAFA] antialiased">
+
+  <!-- ======================================================= -->
+  <!-- PERSISTENT SIDEBAR NAVIGATION (LINEAR / STRIPE STYLE)   -->
+  <!-- ======================================================= -->
+  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between flex-shrink-0 min-h-screen z-30 sticky top-0 h-screen">
+    
+    <!-- BRAND & MAIN NAV -->
+    <div class="flex flex-col flex-1 overflow-y-auto">
+      
+      <!-- LOGO -->
+      <div class="h-14 px-5 flex items-center justify-between border-b border-slate-100 flex-shrink-0 cursor-pointer" onclick="navigateTo('dashboard')">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-7 h-7 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
+            CS
+          </div>
+          <div>
+            <div class="font-semibold text-xs tracking-tight text-slate-900">Catalog Studio</div>
+            <div class="text-[10px] text-slate-400 font-medium">Enterprise Data Ops</div>
+          </div>
+        </div>
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">v3.5</span>
+      </div>
+
+      <!-- WORKFLOW ACTIONS -->
+      <div class="px-3 pt-4 pb-2">
+        <button onclick="startNewProjectWizard()" class="w-full py-2 px-3 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium shadow-xs transition-colors flex items-center justify-center space-x-1.5">
+          <i class="fa-solid fa-plus text-[10px]"></i>
+          <span>New Scraping Project</span>
+        </button>
+      </div>
+
+      <!-- NAVIGATION LINKS -->
+      <nav class="px-3 py-2 space-y-1 text-xs font-medium">
+        
+        <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-900 bg-slate-100 transition-colors">
+          <i class="fa-solid fa-chart-pie w-4 text-slate-600"></i>
+          <span>Dashboard</span>
+        </button>
+
+        <button onclick="navigateTo('projects')" id="nav-projects" class="sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+          <i class="fa-solid fa-folder-tree w-4 text-slate-400"></i>
+          <span>My Projects</span>
+        </button>
+
+        <div class="pt-4 pb-1 px-3 text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Project Workspace</div>
+
+        <button onclick="navigateTo('input-spreadsheet')" id="nav-input-spreadsheet" class="sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+          <i class="fa-solid fa-table-cells w-4 text-slate-400"></i>
+          <span>Input Spreadsheet</span>
+        </button>
+
+        <button onclick="navigateTo('config')" id="nav-config" class="sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+          <i class="fa-solid fa-sliders w-4 text-slate-400"></i>
+          <span>Extraction Config</span>
+        </button>
+
+        <button onclick="navigateTo('live')" id="nav-live" class="sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+          <i class="fa-solid fa-bolt w-4 text-slate-400"></i>
+          <span>Live Scraping</span>
+        </button>
+
+        <button onclick="navigateTo('output-spreadsheet')" id="nav-output-spreadsheet" class="sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+          <i class="fa-solid fa-table-list w-4 text-slate-400"></i>
+          <span>Output Spreadsheet</span>
+        </button>
+
+        <button onclick="navigateTo('export')" id="nav-export" class="sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+          <i class="fa-solid fa-file-export w-4 text-slate-400"></i>
+          <span>Review & Export</span>
+        </button>
+
+        <div class="pt-4 pb-1 px-3 text-[10px] uppercase font-semibold text-slate-400 tracking-wider">System</div>
+
+        <button onclick="navigateTo('settings')" id="nav-settings" class="sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+          <i class="fa-solid fa-gear w-4 text-slate-400"></i>
+          <span>Settings & Network</span>
+        </button>
+
+      </nav>
+
+    </div>
+
+    <!-- BOTTOM CUSTOMER PROFILE & METRICS -->
+    <div class="p-3 border-t border-slate-100 bg-slate-50/50">
+      <!-- CUSTOMER ACCOUNT INFO -->
+      <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-200/60">
+        <div class="flex items-center space-x-2 min-w-0">
+          <div id="sidebarUserAvatar" class="w-7 h-7 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0 tracking-wider">
+            C1
+          </div>
+          <div class="min-w-0">
+            <div id="sidebarUserName" class="font-semibold text-xs text-slate-800 truncate">Customer 1</div>
+            <div id="sidebarUserEmail" class="text-[10px] text-slate-400 truncate">customer1@storehub.io</div>
+          </div>
+        </div>
+        <button onclick="openAuthModal()" class="text-[10px] font-medium text-slate-500 hover:text-slate-900 px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 shadow-2xs transition-colors" title="Switch Customer Account">
+          <i class="fa-solid fa-repeat text-[9px] mr-1"></i>Switch
+        </button>
+      </div>
+
+      <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1.5">
+        <span class="flex items-center gap-1.5 font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          Vault Storage Isolated
+        </span>
+        <span id="sidebarTenantId" class="font-mono text-[10px] text-slate-400">usr_cust_1</span>
+      </div>
+      <div class="text-[10px] text-slate-400 flex justify-between">
+        <span>Active Project:</span>
+        <span id="sidebarActiveProjectName" class="font-medium text-slate-700 truncate max-w-[110px]">None</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ======================================================= -->
+  <!-- MAIN APPLICATION VIEWPORT                               -->
+  <!-- ======================================================= -->
+  <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+    
+    <!-- TOP CONTEXT & BREADCRUMB BAR -->
+    <header class="h-14 bg-white border-b border-slate-200 sticky top-0 z-20 px-6 flex items-center justify-between">
+      
+      <!-- BREADCRUMBS -->
+      <div class="flex items-center space-x-2 text-xs">
+        <span class="text-slate-400 font-medium">Platform</span>
+        <span class="text-slate-300">/</span>
+        <span id="breadcrumbSection" class="text-slate-500 font-medium">Dashboard</span>
+        <span class="text-slate-300">/</span>
+        <span id="breadcrumbProject" class="text-slate-900 font-semibold truncate max-w-xs">Overview</span>
+      </div>
+
+      <!-- PROJECT SWITCHER & CUSTOMER VAULT PILL -->
+      <div class="flex items-center space-x-3">
+        <!-- CUSTOMER VAULT BADGE -->
+        <button onclick="openAuthModal()" class="flex items-center space-x-2 px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs text-slate-700 transition-colors" title="Customer Workspace: Click to switch">
+          <i class="fa-solid fa-shield-halved text-emerald-600 text-[11px]"></i>
+          <span class="font-medium" id="topbarCustomerName">Customer 1 (Apex)</span>
+          <span class="text-[10px] text-slate-400 font-mono" id="topbarTenantId">[usr_cust_1]</span>
+          <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 ml-0.5"></i>
+        </button>
+
+        <div class="flex items-center space-x-2">
+          <label class="text-[11px] font-medium text-slate-400 hidden sm:inline">Project:</label>
+          <select id="projectSwitcher" onchange="onSwitchProjectDropdown(this.value)" class="bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs text-slate-800 focus:outline-none">
+            <option value="">No Active Project</option>
+          </select>
+        </div>
+
+        <button onclick="quickRefreshCurrentView()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition-colors" title="Refresh Data">
+          <i class="fa-solid fa-rotate-right text-xs"></i>
+        </button>
+      </div>
+
+    </header>
+
+    <!-- CONTENT CONTAINER -->
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto">
+      
+      <!-- ===================================================== -->
+      <!-- VIEW 1: DASHBOARD                                     -->
+      <!-- ===================================================== -->
+      <section id="view-dashboard" class="space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+          <div>
+            <h1 class="text-lg font-semibold text-slate-900 tracking-tight">Operations Dashboard</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Summary of scraping projects, throughput rates, and real-time activity.</p>
+          </div>
+          <button onclick="startNewProjectWizard()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-medium shadow-xs transition-colors">
+            Create Scraping Project
+          </button>
+        </div>
+
+        <!-- STAT METRICS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Projects</span>
+            <div id="dashTotalProjects" class="text-2xl font-semibold text-slate-900 mt-1 font-mono">0</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Active Jobs</span>
+            <div id="dashActiveProjects" class="text-2xl font-semibold text-slate-900 mt-1 font-mono">0</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Completed Projects</span>
+            <div id="dashCompletedProjects" class="text-2xl font-semibold text-slate-900 mt-1 font-mono">0</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Extracted Records</span>
+            <div id="dashTotalRecords" class="text-2xl font-semibold text-slate-900 mt-1 font-mono">0</div>
+          </div>
+        </div>
+
+        <!-- RECENT PROJECTS & RECENT ACTIVITY -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+              <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Recent Scraping Projects</h2>
+              <button onclick="navigateTo('projects')" class="text-xs text-blue-600 hover:underline font-medium">View All</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-500 border-b border-slate-200 text-[11px] uppercase tracking-wider">
+                  <tr>
+                    <th class="px-4 py-2.5">Project Name</th>
+                    <th class="px-4 py-2.5">Platform</th>
+                    <th class="px-4 py-2.5">Status</th>
+                    <th class="px-4 py-2.5">Progress</th>
+                    <th class="px-4 py-2.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dashRecentProjectsTable" class="divide-y divide-slate-100 text-slate-700">
+                  <tr>
+                    <td colspan="5" class="text-center py-8 text-slate-400">No projects created yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SYSTEM ACTIVITY LOGS -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-4 flex flex-col justify-between">
+            <div>
+              <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">Live Activity Stream</h2>
+              <div id="dashRecentLogsList" class="space-y-2.5 text-xs text-slate-600 max-h-80 overflow-y-auto">
+                <div class="text-slate-400 text-xs py-4 text-center">No system events logged.</div>
+              </div>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex justify-between text-[11px] text-slate-400">
+              <span>Auto-refreshing</span>
+              <span class="font-mono">SQLite WAL Engine</span>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ===================================================== -->
+      <!-- VIEW 2: NEW PROJECT WIZARD                            -->
+      <!-- ===================================================== -->
+      <section id="view-wizard" class="hidden space-y-6">
+        
+        <!-- WIZARD STEPPER HEADER -->
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+          <div class="flex items-center justify-between text-xs font-medium text-slate-400 border-b border-slate-100 pb-3 mb-4 overflow-x-auto">
+            <div id="step-pill-1" class="flex items-center space-x-1.5 text-slate-900 font-semibold cursor-pointer" onclick="setWizardStep(1)">
+              <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px]">1</span>
+              <span>Import Data</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+            <div id="step-pill-2" class="flex items-center space-x-1.5 cursor-pointer" onclick="setWizardStep(2)">
+              <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px]">2</span>
+              <span>Spreadsheet Editor</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+            <div id="step-pill-3" class="flex items-center space-x-1.5 cursor-pointer" onclick="setWizardStep(3)">
+              <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px]">3</span>
+              <span>Platform</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+            <div id="step-pill-4" class="flex items-center space-x-1.5 cursor-pointer" onclick="setWizardStep(4)">
+              <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px]">4</span>
+              <span>Extraction Fields</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+            <div id="step-pill-5" class="flex items-center space-x-1.5 cursor-pointer" onclick="setWizardStep(5)">
+              <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px]">5</span>
+              <span>Workers</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+            <div id="step-pill-6" class="flex items-center space-x-1.5 cursor-pointer" onclick="setWizardStep(6)">
+              <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px]">6</span>
+              <span>Run & Output</span>
+            </div>
+          </div>
+
+          <!-- PROJECT INITIAL DETAILS -->
+          <div class="flex flex-col sm:flex-row items-end gap-3">
+            <div class="flex-1 w-full">
+              <label class="block text-[11px] font-medium text-slate-500 mb-1">Project Name:</label>
+              <input type="text" id="wizardProjectName" value="E-Commerce Catalog Scraping" class="w-full bg-white border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-900 font-medium">
+            </div>
+            <button onclick="saveWizardProjectMeta()" class="px-3.5 py-1.5 rounded-md bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-medium transition-colors">
+              Save Project Name
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP CONTAINER 1: IMPORT DATA -->
+        <div id="wizard-step-1" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- FILE UPLOAD -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-xs">
+              <div>
+                <h3 class="text-sm font-semibold text-slate-900">Upload Spreadsheet Document</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Upload product names or URLs in standard formats.</p>
+              </div>
+
+              <div id="wizardDropzone" onclick="document.getElementById('wizardFileInput').click()" class="border border-dashed border-slate-300 hover:border-slate-400 rounded-lg p-8 text-center cursor-pointer transition-colors bg-slate-50/50 hover:bg-slate-50">
+                <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-2"></i>
+                <div class="text-xs font-semibold text-slate-800">Click or drag file to upload</div>
+                <div class="text-[11px] text-slate-500 mt-1">Supports CSV, XLSX, XLS spreadsheets</div>
+                <input type="file" id="wizardFileInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="uploadWizardFile(event)">
+              </div>
+
+              <div id="wizardUploadFeedback" class="hidden p-3 bg-slate-50 border border-slate-200 rounded-md text-xs space-y-1">
+                <div class="font-medium text-slate-900 flex justify-between">
+                  <span id="wizardUploadFilename">catalog.csv</span>
+                  <span id="wizardUploadRowCount" class="text-slate-600 font-mono">0 rows</span>
+                </div>
+                <div class="text-[11px] text-slate-500">Document validated and loaded into spreadsheet buffer.</div>
+              </div>
+            </div>
+
+            <!-- MANUAL URL PASTE -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-xs flex flex-col justify-between">
+              <div>
+                <h3 class="text-sm font-semibold text-slate-900">Paste Product Names or URLs</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Input raw list directly (one per line or comma-separated).</p>
+                <textarea id="wizardManualInput" rows="7" placeholder="https://www.amazon.in/dp/B01M1HZ6S3&#10;https://brand.myshopify.com/products/example-shirt&#10;Milton Thermosteel Flip Lid Flask 1000ml&#10;boAt Airdopes 141 Earbuds" class="mt-3 w-full bg-white border border-slate-200 rounded-md p-3 text-xs text-slate-800 font-mono leading-relaxed placeholder-slate-400"></textarea>
+              </div>
+
+              <button onclick="submitManualUrls()" class="w-full py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-slate-800 font-medium text-xs transition-colors">
+                Parse & Load Pasted Items
+              </button>
+            </div>
+
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button onclick="setWizardStep(2)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-medium shadow-xs transition-colors flex items-center space-x-1.5">
+              <span>Continue to Spreadsheet Editor</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================== -->
+      <!-- VIEW 3: MY PROJECTS INVENTORY                         -->
+      <!-- ===================================================== -->
+      <section id="view-projects" class="hidden space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+          <div>
+            <h1 class="text-lg font-semibold text-slate-900 tracking-tight">Project Management</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Manage data extraction pipelines, view job status, and resume workflows.</p>
+          </div>
+          <button onclick="startNewProjectWizard()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-medium shadow-xs transition-colors">
+            New Project
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50 text-slate-500 border-b border-slate-200 text-[11px] uppercase tracking-wider">
+                <tr>
+                  <th class="px-4 py-2.5">Project ID & Name</th>
+                  <th class="px-4 py-2.5">Platform</th>
+                  <th class="px-4 py-2.5">Status</th>
+                  <th class="px-4 py-2.5">Items</th>
+                  <th class="px-4 py-2.5">Last Updated</th>
+                  <th class="px-4 py-2.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="projectsTableBody" class="divide-y divide-slate-100 text-slate-700">
+                <tr>
+                  <td colspan="6" class="text-center py-8 text-slate-400">Loading project inventory...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================== -->
+      <!-- VIEW 4: INPUT SPREADSHEET EDITOR (AIRTABLE GRADE)     -->
+      <!-- ===================================================== -->
+      <section id="view-input-spreadsheet" class="hidden space-y-4">
+        
+        <!-- SPREADSHEET TOOLBAR -->
+        <div class="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 shadow-xs space-y-3">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <h2 class="text-sm font-semibold text-slate-900">Input Data Editor</h2>
+                <span id="inputSheetBadge" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-mono">0 rows</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">Click any cell to edit values directly. Add, rename, or delete columns freely.</p>
+            </div>
+
+            <!-- COLUMN TOOLS & ROW ACTIONS -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="promptAddColumn('input')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 transition-colors">
+                <i class="fa-solid fa-plus mr-1 text-[10px]"></i> Add Column
+              </button>
+              <button onclick="promptAddRow('input')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 transition-colors">
+                <i class="fa-solid fa-plus mr-1 text-[10px]"></i> Add Row
+              </button>
+              <button onclick="deleteSelectedRows('input')" id="btnDelSelectedInput" class="px-2.5 py-1.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-md text-xs font-medium transition-colors disabled:opacity-30" disabled>
+                Delete Selected
+              </button>
+              <button onclick="navigateTo('config')" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-medium transition-colors">
+                Confirm & Configure Extraction &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- MAPPING BAR -->
+          <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div class="flex items-center space-x-2">
+              <label class="font-medium text-slate-600 text-xs">Target Search / URL Column:</label>
+              <select id="inputMappingTargetCol" onchange="onMappingColChange(this.value)" class="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs text-slate-800 font-semibold focus:outline-none">
+                <option value="">Select Target Column</option>
+              </select>
+            </div>
+
+            <div class="relative w-full sm:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+              <input type="text" id="inputSearchFilter" oninput="onInputSearchChange()" placeholder="Filter rows..." class="w-full bg-white border border-slate-200 rounded-md pl-7 pr-2 py-1 text-xs text-slate-800">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SPREADSHEET GRID -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="overflow-x-auto max-h-[580px] overflow-y-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead id="inputTableHead" class="sticky top-0 z-20 bg-slate-50 text-slate-600 border-b border-slate-200 font-semibold text-[11px] uppercase tracking-wider"></thead>
+              <tbody id="inputTableBody" class="divide-y divide-slate-100 text-xs text-slate-700"></tbody>
+            </table>
+          </div>
+
+          <!-- PAGINATION -->
+          <div class="p-3 bg-white border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <div>Showing <span id="inputRangeText" class="font-semibold text-slate-900">0</span> of <span id="inputTotalCountText" class="font-semibold text-slate-900">0</span> rows</div>
+            <div class="flex items-center space-x-1.5">
+              <button id="btnInputPrev" onclick="changeInputPage(-1)" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 disabled:opacity-30">
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+              </button>
+              <span id="inputPageIndicator" class="px-2 font-medium">Page 1 of 1</span>
+              <button id="btnInputNext" onclick="changeInputPage(1)" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 disabled:opacity-30">
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================== -->
+      <!-- VIEW 5: EXTRACTION CONFIGURATION & PLATFORMS          -->
+      <!-- ===================================================== -->
+      <section id="view-config" class="hidden space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+          <div>
+            <h1 class="text-lg font-semibold text-slate-900 tracking-tight">Scraping Configuration</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Select target e-commerce platforms and customize extracted fields.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <select id="configPresetSelect" onchange="applyConfigPreset(this.value)" class="bg-white border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-800">
+              <option value="">Load Config Preset...</option>
+            </select>
+            <button onclick="saveCurrentConfigPreset()" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700">
+              Save Preset
+            </button>
+          </div>
+        </div>
+
+        <!-- PLATFORM SELECTION CARDS -->
+        <div>
+          <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">1. Select E-Commerce Platform</h2>
+          <div id="platformsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- FIELD CONFIGURATION ACCORDION / PANELS -->
+        <div class="space-y-4 pt-2">
+          <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">2. Data Extraction Fields</h2>
+
+          <!-- A. PRODUCT INFORMATION -->
+          <div class="bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-xs">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">A. Product Information</h3>
+                <p class="text-[11px] text-slate-500">Extract genuine brand/vendor name, product title, and category metadata.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="cfgVendor" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900"></div>
+              </label>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1 border-t border-slate-100">
+              <label class="flex items-center space-x-2 text-slate-700">
+                <input type="checkbox" id="cfgBrandResolver" checked class="rounded border-slate-300 text-slate-900">
+                <span>Enforce Known Brands Dictionary (Never tag "Amazon" as Vendor)</span>
+              </label>
+              <label class="flex items-center space-x-2 text-slate-700">
+                <input type="checkbox" id="cfgCleanTitle" checked class="rounded border-slate-300 text-slate-900">
+                <span>Clean excessive promotional titles and symbols</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- B. PRODUCT IMAGES -->
+          <div class="bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-xs">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">B. Product Images Gallery</h3>
+                <p class="text-[11px] text-slate-500">Extract high-resolution primary and secondary gallery image URLs.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="cfgImages" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900"></div>
+              </label>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1 border-t border-slate-100">
+              <div>
+                <label class="block text-[11px] text-slate-500 mb-1">Max Images per Product:</label>
+                <select id="cfgMaxImages" class="w-full bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs text-slate-800">
+                  <option value="1">1 (Primary Thumbnail Only)</option>
+                  <option value="2">2 Images</option>
+                  <option value="3">3 Images</option>
+                  <option value="4">4 Images</option>
+                  <option value="5" selected>5 Images (Standard Shopify)</option>
+                  <option value="8">8 Images</option>
+                  <option value="10">10 Images</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-500 mb-1">Image Quality:</label>
+                <select id="cfgImgQuality" class="w-full bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs text-slate-800">
+                  <option value="hires" selected>Clean Hi-Res (Uncropped)</option>
+                  <option value="standard">Standard Web</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- C. PRICING & MRP -->
+          <div class="bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-xs">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">C. Pricing & MRP</h3>
+                <p class="text-[11px] text-slate-500">Retail price, compare-at price / MRP, and currency adjustment.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="cfgPricing" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900"></div>
+              </label>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1 border-t border-slate-100">
+              <div>
+                <label class="block text-[11px] text-slate-500 mb-1">Price Markup (%):</label>
+                <input type="number" id="cfgPriceMargin" value="0" min="0" step="1" class="w-full bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs text-slate-800">
+              </div>
+              <div class="flex items-center pt-4">
+                <label class="flex items-center space-x-2 text-slate-700">
+                  <input type="checkbox" id="cfgRoundPrice" checked class="rounded border-slate-300 text-slate-900">
+                  <span>Round Prices to Nearest Integer</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100">
+              <div class="p-3 rounded-lg border border-slate-200 bg-slate-50/70 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label class="flex items-center space-x-2.5 cursor-pointer">
+                    <input type="checkbox" id="cfgEstimateMissingPrice" checked class="rounded border-slate-300 text-slate-900 focus:ring-0">
+                    <span class="text-xs font-semibold text-slate-800">Smart Approximate Price Fallback (Reasoning Engine)</span>
+                  </label>
+                  <span class="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-medium">Auto Reasoning</span>
+                </div>
+                <p class="text-[11px] text-slate-500 pl-6 leading-relaxed">
+                  If the live market price is unlisted, out of stock, or not found on the page, the system will intelligently reason and assign a realistic approximate retail price based on product weight, volume, category reasoning, and market benchmarks. You can toggle this on or off anytime.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- D. DESCRIPTION & KEY BULLETS -->
+          <div class="bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-xs">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">D. Descriptions & Feature Bullets</h3>
+                <p class="text-[11px] text-slate-500">Extract clean bullet points and HTML product descriptions.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="cfgDesc" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900"></div>
+              </label>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1 border-t border-slate-100">
+              <div>
+                <label class="block text-[11px] text-slate-500 mb-1">Max Feature Bullets:</label>
+                <input type="number" id="cfgMaxBullets" value="5" min="1" max="10" class="w-full bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs text-slate-800">
+              </div>
+              <div class="flex items-center pt-4">
+                <label class="flex items-center space-x-2 text-slate-700">
+                  <input type="checkbox" id="cfgRemoveAmazonMentions" checked class="rounded border-slate-300 text-slate-900">
+                  <span>Filter Out Third-Party Marketplace Mentions</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- E. CATEGORY TAGS -->
+          <div class="bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-xs">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">E. Subcategory Tags (Title Case)</h3>
+                <p class="text-[11px] text-slate-500">Automatically classify into Title Case category tags.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="cfgTags" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900"></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- F. OFFICIAL SHOPIFY TEMPLATE FORMAT -->
+          <div class="bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-xs">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">F. Shopify Official Template Format (61 Columns)</h3>
+                  <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-medium">Official Spec</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5">Auto-format the output sheet according to Shopify's official 61-column product CSV template.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="cfgShopifyFormat" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900"></div>
+              </label>
+            </div>
+            <div class="text-[11px] text-slate-500 bg-slate-50/70 p-3 rounded-lg border border-slate-200 leading-relaxed">
+              When toggled ON, the output spreadsheet will automatically re-create and populate all 61 standard Shopify columns (Title, URL handle, Vendor, Tags, Pricing, SEO, Variant Options, Google Shopping, Packed Product Dimensions, etc.) with pre-filled defaults (Published: TRUE, Status: Active, Requires Shipping: TRUE, Taxable: TRUE, etc.) ready for immediate Shopify Catalog Import.
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flex justify-between pt-4 border-t border-slate-200">
+          <button onclick="navigateTo('input-spreadsheet')" class="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700">
+            &larr; Back to Input Spreadsheet
+          </button>
+          <button onclick="saveAndProceedToWorkers()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-medium shadow-xs transition-colors">
+            Proceed to Worker Concurrency &rarr;
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ===================================================== -->
+      <!-- VIEW 6: LIVE SCRAPING MONITOR & DASHBOARD             -->
+      <!-- ===================================================== -->
+      <section id="view-live" class="hidden space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+          <div>
+            <h1 class="text-lg font-semibold text-slate-900 tracking-tight">Live Scraping Dashboard</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Real-time worker concurrency monitor, event logs, and job controls.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="jobControl('pause')" id="btnJobPause" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 transition-colors disabled:opacity-40" disabled>
+              <i class="fa-solid fa-pause mr-1 text-[10px]"></i> Pause
+            </button>
+            <button onclick="jobControl('resume')" id="btnJobResume" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 transition-colors disabled:opacity-40" disabled>
+              <i class="fa-solid fa-play mr-1 text-[10px]"></i> Resume
+            </button>
+            <button onclick="jobControl('stop')" id="btnJobStop" class="px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-md text-xs font-medium transition-colors disabled:opacity-40" disabled>
+              <i class="fa-solid fa-stop mr-1 text-[10px]"></i> Cancel Job
+            </button>
+            <button onclick="jobControl('retry')" id="btnJobRetry" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 transition-colors">
+              <i class="fa-solid fa-rotate-left mr-1 text-[10px]"></i> Retry Failed
+            </button>
+          </div>
+        </div>
+
+        <!-- WORKER CONCURRENCY SLIDER & START BUTTON -->
+        <div id="jobStarterCard" class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Worker Concurrency</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Select number of concurrent extraction workers.</p>
+          </div>
+          <div class="flex items-center space-x-3 w-full md:w-auto">
+            <select id="jobConcurrencySelect" class="bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 font-semibold focus:outline-none">
+              <option value="1">1 Worker (Conservative)</option>
+              <option value="2" selected>2 Workers (Balanced & Steady - Recommended)</option>
+              <option value="3">3 Workers (Fast)</option>
+              <option value="4">4 Workers (Maximum Throughput)</option>
+            </select>
+            <button onclick="launchScrapingJob()" id="btnStartJob" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold shadow-xs transition-colors flex items-center space-x-1.5">
+              <i class="fa-solid fa-play text-[10px]"></i>
+              <span>Launch Scraping Job</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- LIVE TELEMETRY CARDS -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Overall Progress</span>
+            <div id="liveProgressPercent" class="text-xl font-semibold text-slate-900 mt-1 font-mono">0%</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Processed / Total</span>
+            <div class="text-xl font-semibold text-slate-900 mt-1 font-mono"><span id="liveProcessedCount">0</span> / <span id="liveTotalCount">0</span></div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Processing Speed</span>
+            <div class="text-xl font-semibold text-slate-900 mt-1 font-mono"><span id="liveSpeed">0.0</span> / min</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Active Workers</span>
+            <div id="liveActiveWorkers" class="text-xl font-semibold text-slate-900 mt-1 font-mono">0</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Elapsed / ETA</span>
+            <div class="text-xl font-semibold text-slate-900 mt-1 font-mono"><span id="liveElapsed">0s</span> / <span id="liveEta">--</span></div>
+          </div>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+          <div id="liveProgressBar" class="bg-slate-900 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+
+        <!-- TERMINAL LOGS -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span id="liveStatusDot" class="w-2 h-2 rounded-full bg-slate-300"></span>
+              <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Live Activity Stream</h3>
+            </div>
+            <button onclick="navigateTo('output-spreadsheet')" class="text-xs text-blue-600 hover:underline font-medium">
+              View Streaming Output Spreadsheet &rarr;
+            </button>
+          </div>
+          <div id="liveLogsContainer" class="bg-slate-900 text-slate-200 font-mono text-xs p-4 h-64 overflow-y-auto space-y-1">
+            <div class="text-slate-500">// Waiting for job launch...</div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================== -->
+      <!-- VIEW 7: OUTPUT SPREADSHEET (LIVE STREAMING)           -->
+      <!-- ===================================================== -->
+      <section id="view-output-spreadsheet" class="hidden space-y-4">
+        
+        <div class="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 shadow-xs space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <h2 class="text-sm font-semibold text-slate-900">Output Data Stream</h2>
+                <span id="outputSheetBadge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">0 rows</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">Rows populate spontaneously as each item is enriched. Edits persist safely in database.</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="outputStatusFilter" onchange="onOutputFilterChange()" class="bg-white border border-slate-200 rounded-md px-2.5 py-1.5 text-xs text-slate-800">
+                <option value="">All Statuses</option>
+                <option value="completed">Completed Only</option>
+                <option value="failed">Failed Only</option>
+              </select>
+
+              <button onclick="navigateTo('export')" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-medium transition-colors">
+                Proceed to Export &rarr;
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex flex-wrap justify-between items-center gap-2 text-xs">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-slate-400 text-[11px]">Columns & Schema:</span>
+              <button onclick="applyShopifyTemplateAction()" title="Re-create sheet according to the official 61-column Shopify CSV template" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-xs font-medium transition-colors flex items-center space-x-1.5 shadow-xs">
+                <i class="fa-solid fa-file-csv text-emerald-600 text-[11px]"></i>
+                <span>Format as Shopify Template (61 cols)</span>
+              </button>
+              <button onclick="addMissingShopifyColumnsAction()" title="Add any missing Shopify columns to existing sheet" class="px-2.5 py-1 bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs font-medium transition-colors flex items-center space-x-1.5 shadow-xs">
+                <i class="fa-solid fa-plus text-blue-600 text-[11px]"></i>
+                <span>Add Missing Shopify Columns</span>
+              </button>
+              <button onclick="resetStudioColumnsAction()" title="Reset to standard compact Studio columns" class="px-2 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded text-xs font-medium transition-colors">
+                Reset View
+              </button>
+            </div>
+            <div class="relative w-full sm:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+              <input type="text" id="outputSearchFilter" oninput="onOutputSearchChange()" placeholder="Filter results..." class="w-full bg-white border border-slate-200 rounded-md pl-7 pr-2 py-1 text-xs text-slate-800">
+            </div>
+          </div>
+        </div>
+
+        <!-- OUTPUT SPREADSHEET TABLE -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead id="outputTableHead" class="sticky top-0 z-20 bg-slate-50 text-slate-600 border-b border-slate-200 font-semibold text-[11px] uppercase tracking-wider"></thead>
+              <tbody id="outputTableBody" class="divide-y divide-slate-100 text-xs text-slate-700"></tbody>
+            </table>
+          </div>
+
+          <div class="p-3 bg-white border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <div>Showing <span id="outputRangeText" class="font-semibold text-slate-900">0</span> of <span id="outputTotalCountText" class="font-semibold text-slate-900">0</span> records</div>
+            <div class="flex items-center space-x-1.5">
+              <button id="btnOutputPrev" onclick="changeOutputPage(-1)" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 disabled:opacity-30">
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+              </button>
+              <span id="outputPageIndicator" class="px-2 font-medium">Page 1 of 1</span>
+              <button id="btnOutputNext" onclick="changeOutputPage(1)" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 disabled:opacity-30">
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================== -->
+      <!-- VIEW 8: REVIEW & EXPORT                               -->
+      <!-- ===================================================== -->
+      <section id="view-export" class="hidden space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+          <div>
+            <h1 class="text-lg font-semibold text-slate-900 tracking-tight">Review & Export Dataset</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Final audit of completed extraction and 1-click downloads.</p>
+          </div>
+        </div>
+
+        <!-- FINAL AUDIT METRICS -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Extracted Successfully</span>
+            <div id="exportSuccessCount" class="text-2xl font-semibold text-slate-900 mt-1 font-mono">0</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Failed / Flagged</span>
+            <div id="exportFailedCount" class="text-2xl font-semibold text-slate-900 mt-1 font-mono">0</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Output Rows</span>
+            <div id="exportTotalCount" class="text-2xl font-semibold text-slate-900 mt-1 font-mono">0</div>
+          </div>
+        </div>
+
+        <!-- EXPORT OPTIONS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <div class="bg-white rounded-xl border border-slate-200 p-6 flex flex-col justify-between shadow-xs">
+            <div>
+              <div class="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-800 mb-3">
+                <i class="fa-solid fa-file-csv"></i>
+              </div>
+              <h3 class="font-semibold text-sm text-slate-900">Shopify 61-Column Master CSV</h3>
+              <p class="text-xs text-slate-500 mt-1">Compliant standard format with secondary 3-key image rows for Shopify catalog import.</p>
+            </div>
+            <button onclick="downloadExport('shopify_csv', 'all')" class="mt-6 w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-medium transition-colors">
+              Download Shopify CSV
+            </button>
+          </div>
+
+          <div class="bg-white rounded-xl border border-slate-200 p-6 flex flex-col justify-between shadow-xs">
+            <div>
+              <div class="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-800 mb-3">
+                <i class="fa-solid fa-file-excel"></i>
+              </div>
+              <h3 class="font-semibold text-sm text-slate-900">Formatted Excel Workbook (.xlsx)</h3>
+              <p class="text-xs text-slate-500 mt-1">Multi-column styled workbook with dark header formatting and auto-sized column widths.</p>
+            </div>
+            <button onclick="downloadExport('excel', 'all')" class="mt-6 w-full py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 rounded-md text-xs font-medium transition-colors">
+              Download Excel XLSX
+            </button>
+          </div>
+
+          <div class="bg-white rounded-xl border border-slate-200 p-6 flex flex-col justify-between shadow-xs">
+            <div>
+              <div class="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-800 mb-3">
+                <i class="fa-solid fa-table"></i>
+              </div>
+              <h3 class="font-semibold text-sm text-slate-900">Flat Enriched CSV</h3>
+              <p class="text-xs text-slate-500 mt-1">Clean single-row table containing all original fields plus enriched product data.</p>
+            </div>
+            <button onclick="downloadExport('flat_csv', 'all')" class="mt-6 w-full py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 rounded-md text-xs font-medium transition-colors">
+              Download Flat CSV
+            </button>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ===================================================== -->
+      <!-- VIEW 9: SETTINGS & NETWORK                            -->
+      <!-- ===================================================== -->
+      <section id="view-settings" class="hidden space-y-6">
+        
+        <div class="pb-2 border-b border-slate-200">
+          <h1 class="text-lg font-semibold text-slate-900 tracking-tight">System Settings & Mobile Access</h1>
+          <p class="text-xs text-slate-500 mt-0.5">Concurrency limits, network endpoints, and local storage information.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <div class="bg-white rounded-xl border border-slate-200 p-5 space-y-4 shadow-xs">
+            <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Local Wi-Fi Network Access</h3>
+            <div class="p-3 bg-slate-50 rounded-md border border-slate-200 font-mono text-xs text-slate-800" id="settingsWifiUrl">http://192.168.1.6:8000</div>
+            <div class="flex justify-center p-4 bg-white rounded-lg border border-slate-200">
+              <div id="settingsQrCode"></div>
+            </div>
+            <p class="text-[11px] text-slate-400 text-center">Scan to open the platform on smartphone or tablet connected to the same Wi-Fi.</p>
+          </div>
+
+          <div class="bg-white rounded-xl border border-slate-200 p-5 space-y-4 shadow-xs">
+            <h3 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Engine Information</h3>
+            <div class="space-y-2 text-xs text-slate-600">
+              <div class="flex justify-between py-1 border-b border-slate-100">
+                <span>Database Engine:</span>
+                <span class="font-mono text-slate-800">SQLite 3 (Persistent)</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-100">
+                <span>Database Path:</span>
+                <span class="font-mono text-slate-800">studio/projects.db</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-100">
+                <span>Anti-Bot Stealth Profile:</span>
+                <span class="font-mono text-slate-800">Active (Chrome Headless)</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-100">
+                <span>Master Catalog Pre-Index:</span>
+                <span class="font-mono text-slate-800">5,596 products</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-100">
+                <span>Amazon Cache Index:</span>
+                <span class="font-mono text-slate-800">2,478 entries</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- AUTHENTICATION & MULTI-TENANT ISOLATION MODAL           -->
+  <!-- ======================================================= -->
+  <div id="authModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden">
+      
+      <!-- MODAL HEADER -->
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-7 h-7 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
+            <i class="fa-solid fa-lock text-[11px]"></i>
+          </div>
+          <div>
+            <h3 class="text-xs font-semibold text-slate-900">Customer Workspace Isolation</h3>
+            <p class="text-[10px] text-slate-500">Zero cross-contamination local storage</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" id="btnAuthClose" class="text-slate-400 hover:text-slate-600 p-1 rounded-md text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- ZERO CONTAMINATION NOTICE -->
+      <div class="p-5 space-y-4">
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
+          <div class="font-semibold text-slate-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-check text-emerald-600"></i>
+            Physical & Local Storage Isolation Guarantee
+          </div>
+          <p class="leading-relaxed text-slate-500 text-[11px]">
+            Customer data is stored in isolated local vaults on disk (<code class="font-mono text-[10px] text-slate-700 bg-white px-1 py-0.5 rounded border border-slate-200">user_data/{user_id}/</code>). Customer 2 cannot access or view Customer 1's data.
+          </p>
+        </div>
+
+        <!-- AUTH TABS -->
+        <div class="flex border-b border-slate-200">
+          <button onclick="switchAuthTab('signin')" id="tabSignIn" class="flex-1 pb-2 font-medium text-xs text-slate-900 border-b-2 border-slate-900 text-center">
+            Sign In
+          </button>
+          <button onclick="switchAuthTab('register')" id="tabRegister" class="flex-1 pb-2 font-medium text-xs text-slate-400 hover:text-slate-700 text-center">
+            Create Account
+          </button>
+        </div>
+
+        <!-- SIGN IN FORM -->
+        <form id="formSignIn" onsubmit="handleSignInSubmit(event)" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-medium text-slate-700 mb-1">Customer Email</label>
+            <input type="email" id="authLoginEmail" required placeholder="customer1@storehub.io" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-slate-700 mb-1">Password</label>
+            <input type="password" id="authLoginPass" required placeholder="••••••••" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+          </div>
+          <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold shadow-xs transition-colors">
+            Sign In to Private Workspace
+          </button>
+        </form>
+
+        <!-- REGISTER FORM (HIDDEN) -->
+        <form id="formRegister" onsubmit="handleRegisterSubmit(event)" class="space-y-3 hidden">
+          <div>
+            <label class="block text-[11px] font-medium text-slate-700 mb-1">Customer / Company Name</label>
+            <input type="text" id="authRegName" required placeholder="Acme Brands" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-slate-700 mb-1">Customer Email</label>
+            <input type="email" id="authRegEmail" required placeholder="owner@acme.com" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-slate-700 mb-1">Password (min 6 chars)</label>
+            <input type="password" id="authRegPass" required placeholder="••••••••" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+          </div>
+          <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold shadow-xs transition-colors">
+            Create Isolated Workspace
+          </button>
+        </form>
+
+        <!-- 1-CLICK DEMO TEST SWITCHER -->
+        <div class="pt-3 border-t border-slate-100">
+          <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            1-Click Test Customer Switcher (Verify Isolation)
+          </div>
+          <div class="space-y-1.5">
+            <button type="button" onclick="quickSwitchCustomer('customer1@storehub.io', 'Password123!')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-slate-400 bg-white hover:bg-slate-50 transition-all flex items-center justify-between">
+              <div>
+                <div class="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-slate-900"></span>
+                  Customer 1: Apex Retailers
+                </div>
+                <div class="text-[10px] text-slate-500">Pre-loaded catalog & active projects</div>
+              </div>
+              <span class="text-[10px] text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded">usr_cust_1</span>
+            </button>
+
+            <button type="button" onclick="quickSwitchCustomer('customer2@storehub.io', 'Password123!')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-slate-400 bg-white hover:bg-slate-50 transition-all flex items-center justify-between">
+              <div>
+                <div class="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                  Customer 2: Nova Brands
+                </div>
+                <div class="text-[10px] text-slate-500">100% clean slate, zero projects, separate folder</div>
+              </div>
+              <span class="text-[10px] text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded">usr_cust_2</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APPLICATION CORE -->
+  <script>
+    let currentView = 'dashboard';
+    let currentProjectId = null;
+    let wizardCurrentStep = 1;
+    let inputPage = 1;
+    let outputPage = 1;
+    let livePollInterval = null;
+
+    // AUTHENTICATION & SECURE LOCAL STORAGE STATE
+    let currentUser = null;
+    let authToken = localStorage.getItem('storehub_token') || '';
+
+    // NATIVE FETCH INTERCEPTOR FOR BEARER TOKENS
+    const _originalFetch = window.fetch;
+    window.fetch = async function(url, options = {}) {
+      options = options || {};
+      options.headers = options.headers || {};
+      
+      const token = localStorage.getItem('storehub_token');
+      if (token) {
+        if (options.headers instanceof Headers) {
+          if (!options.headers.has('Authorization')) {
+            options.headers.set('Authorization', `Bearer ${token}`);
+          }
+        } else if (Array.isArray(options.headers)) {
+          options.headers.push(['Authorization', `Bearer ${token}`]);
+        } else {
+          if (!options.headers['Authorization']) {
+            options.headers['Authorization'] = `Bearer ${token}`;
+          }
+        }
+      }
+
+      const response = await _originalFetch(url, options);
+      if (response.status === 401 && !url.includes('/api/auth/')) {
+        openAuthModal();
+      }
+      return response;
+    };
+
+    // CLIENT-SIDE SCOPED LOCAL STORAGE
+    function getUserStorageKey(key) {
+      const uid = currentUser ? currentUser.id : 'guest';
+      return `storehub_vault_${uid}_${key}`;
+    }
+
+    function secureSaveLocal(key, val) {
+      try {
+        localStorage.setItem(getUserStorageKey(key), JSON.stringify(val));
+      } catch (e) {}
+    }
+
+    function secureGetLocal(key) {
+      try {
+        const raw = localStorage.getItem(getUserStorageKey(key));
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function openAuthModal() {
+      document.getElementById('authModal').classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      if (!currentUser) return; // Must have an active user
+      document.getElementById('authModal').classList.add('hidden');
+    }
+
+    function switchAuthTab(tab) {
+      const isSignIn = (tab === 'signin');
+      document.getElementById('formSignIn').classList.toggle('hidden', !isSignIn);
+      document.getElementById('formRegister').classList.toggle('hidden', isSignIn);
+      
+      document.getElementById('tabSignIn').className = isSignIn
+        ? 'flex-1 pb-2 font-medium text-xs text-slate-900 border-b-2 border-slate-900 text-center'
+        : 'flex-1 pb-2 font-medium text-xs text-slate-400 hover:text-slate-700 text-center';
+
+      document.getElementById('tabRegister').className = !isSignIn
+        ? 'flex-1 pb-2 font-medium text-xs text-slate-900 border-b-2 border-slate-900 text-center'
+        : 'flex-1 pb-2 font-medium text-xs text-slate-400 hover:text-slate-700 text-center';
+    }
+
+    function updateCurrentUserUI(user, token) {
+      currentUser = user;
+      authToken = token;
+      localStorage.setItem('storehub_token', token);
+      localStorage.setItem('storehub_current_user', JSON.stringify(user));
+
+      const initials = (user.name || 'CU').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+      document.getElementById('sidebarUserAvatar').innerText = initials;
+      document.getElementById('sidebarUserName').innerText = user.name;
+      document.getElementById('sidebarUserEmail').innerText = user.email;
+      document.getElementById('sidebarTenantId').innerText = user.id;
+
+      document.getElementById('topbarCustomerName').innerText = user.name;
+      document.getElementById('topbarTenantId').innerText = `[${user.id}]`;
+    }
+
+    async function quickSwitchCustomer(email, password) {
+      try {
+        const res = await _originalFetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Reset workspace state on customer switch
+          currentProjectId = null;
+          document.getElementById('breadcrumbProject').innerText = 'Overview';
+          document.getElementById('sidebarActiveProjectName').innerText = 'None';
+          
+          updateCurrentUserUI(data.user, data.token);
+          closeAuthModal();
+
+          // Reload workspace for new customer
+          await loadDashboardData();
+          await loadProjectsInventory();
+          navigateTo('dashboard');
+        } else {
+          alert(data.detail || "Login failed.");
+        }
+      } catch (err) {
+        alert("Authentication error: " + err);
+      }
+    }
+
+    async function handleSignInSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('authLoginEmail').value.trim();
+      const pass = document.getElementById('authLoginPass').value;
+      await quickSwitchCustomer(email, pass);
+    }
+
+    async function handleRegisterSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('authRegName').value.trim();
+      const email = document.getElementById('authRegEmail').value.trim();
+      const pass = document.getElementById('authRegPass').value;
+
+      try {
+        const res = await _originalFetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name, email: email, password: pass })
+        });
+        const data = await res.json();
+        if (data.success) {
+          currentProjectId = null;
+          updateCurrentUserUI(data.user, data.token);
+          closeAuthModal();
+          await loadDashboardData();
+          await loadProjectsInventory();
+          navigateTo('dashboard');
+          alert(`Welcome to your private workspace, ${name}!`);
+        } else {
+          alert(data.detail || "Registration failed.");
+        }
+      } catch (err) {
+        alert("Registration error: " + err);
+      }
+    }
+
+    async function initAuth() {
+      let storedToken = localStorage.getItem('storehub_token');
+      if (storedToken) {
+        try {
+          const res = await _originalFetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${storedToken}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            updateCurrentUserUI(data.user, storedToken);
+            return;
+          }
+        } catch (e) {}
+      }
+      // If no valid stored session, auto-login into Customer 1 as default
+      await quickSwitchCustomer('customer1@storehub.io', 'Password123!');
+    }
+
+    // INITIALIZATION
+    window.addEventListener('DOMContentLoaded', async () => {
+      await initAuth();
+      await loadDashboardData();
+      await loadProjectsInventory();
+      await loadPlatformCards();
+      await loadConfigPresets();
+      await fetchNetworkInfo();
+    });
+
+    // NAVIGATION
+    function navigateTo(viewId) {
+      document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.className = "sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors";
+      });
+
+      const activeView = document.getElementById(`view-${viewId}`);
+      const activeNav = document.getElementById(`nav-${viewId}`);
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeNav) {
+        activeNav.className = "sidebar-item w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-slate-900 bg-slate-100 transition-colors font-semibold";
+      }
+
+      currentView = viewId;
+      document.getElementById('breadcrumbSection').innerText = formatViewName(viewId);
+
+      if (viewId === 'dashboard') loadDashboardData();
+      if (viewId === 'projects') loadProjectsInventory();
+      if (viewId === 'config' && currentProjectId) loadProjectConfig(currentProjectId);
+      if (viewId === 'input-spreadsheet' && currentProjectId) fetchInputSpreadsheet(1);
+      if (viewId === 'output-spreadsheet' && currentProjectId) fetchOutputSpreadsheet(1);
+      if (viewId === 'live' && currentProjectId) startLiveStatusPolling();
+      if (viewId !== 'live' && livePollInterval) {
+        clearInterval(livePollInterval);
+        livePollInterval = null;
+      }
+    }
+
+    function formatViewName(id) {
+      const names = {
+        'dashboard': 'Dashboard',
+        'wizard': 'New Project',
+        'projects': 'My Projects',
+        'input-spreadsheet': 'Input Spreadsheet',
+        'config': 'Scraping Config',
+        'live': 'Live Monitor',
+        'output-spreadsheet': 'Output Spreadsheet',
+        'export': 'Review & Export',
+        'settings': 'Settings'
+      };
+      return names[id] || id;
+    }
+
+    // ==========================================
+    // DASHBOARD & PROJECTS LOGIC
+    // ==========================================
+    async function loadDashboardData() {
+      try {
+        const res = await fetch('/api/dashboard/stats');
+        const data = await res.json();
+        document.getElementById('dashTotalProjects').innerText = data.total_projects;
+        document.getElementById('dashActiveProjects').innerText = data.active_projects;
+        document.getElementById('dashCompletedProjects').innerText = data.completed_projects;
+        document.getElementById('dashTotalRecords').innerText = data.total_extracted_records.toLocaleString();
+
+        const tbody = document.getElementById('dashRecentProjectsTable');
+        if (data.recent_projects && data.recent_projects.length > 0) {
+          tbody.innerHTML = data.recent_projects.map(p => `
+            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+              <td class="px-4 py-3 font-medium text-slate-900">${p.name}</td>
+              <td class="px-4 py-3 text-slate-600 capitalize">${p.platform}</td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusBadgeClass(p.status)}">
+                  ${p.status}
+                </span>
+              </td>
+              <td class="px-4 py-3 font-mono text-[11px]">${p.processed_rows} / ${p.total_rows}</td>
+              <td class="px-4 py-3 text-right">
+                <button onclick="openProjectWorkspace('${p.id}')" class="px-2.5 py-1 rounded bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-medium">Open</button>
+              </td>
+            </tr>
+          `).join('');
+        }
+
+        const logsDiv = document.getElementById('dashRecentLogsList');
+        if (data.recent_activity && data.recent_activity.length > 0) {
+          logsDiv.innerHTML = data.recent_activity.map(l => `
+            <div class="flex items-start space-x-2 py-1 border-b border-slate-100">
+              <span class="font-mono text-slate-400 text-[10px]">${l.time}</span>
+              <span class="text-slate-700">${l.message}</span>
+            </div>
+          `).join('');
+        }
+      } catch (err) {}
+    }
+
+    async function loadProjectsInventory() {
+      try {
+        const res = await fetch('/api/projects');
+        const projects = await res.json();
+
+        // Update Project Switcher Dropdown
+        const switcher = document.getElementById('projectSwitcher');
+        switcher.innerHTML = `<option value="">Select Project...</option>` + projects.map(p => `
+          <option value="${p.id}" ${p.id === currentProjectId ? 'selected' : ''}>${p.name}</option>
+        `).join('');
+
+        const tbody = document.getElementById('projectsTableBody');
+        if (projects.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">No projects yet. Click "New Project" to start.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = projects.map(p => `
+          <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+            <td class="px-4 py-3">
+              <div class="font-semibold text-slate-900">${p.name}</div>
+              <div class="text-[10px] font-mono text-slate-400">${p.id}</div>
+            </td>
+            <td class="px-4 py-3 font-medium text-slate-700 capitalize">${p.platform}</td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusBadgeClass(p.status)}">
+                ${p.status}
+              </span>
+            </td>
+            <td class="px-4 py-3 font-mono text-slate-800">${p.processed_rows} / ${p.total_rows}</td>
+            <td class="px-4 py-3 text-slate-500 font-mono text-[11px]">${new Date(p.updated_at * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+            <td class="px-4 py-3 text-right space-x-1.5">
+              <button onclick="openProjectWorkspace('${p.id}')" class="px-2.5 py-1 rounded bg-slate-900 text-white text-xs font-medium hover:bg-slate-800">Open</button>
+              <button onclick="deleteProject('${p.id}')" class="px-2 py-1 rounded bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs"><i class="fa-solid fa-trash text-[10px]"></i></button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {}
+    }
+
+    function getStatusBadgeClass(status) {
+      if (status === 'completed') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+      if (status === 'running') return 'bg-blue-50 text-blue-700 border border-blue-200';
+      if (status === 'paused') return 'bg-amber-50 text-amber-700 border border-amber-200';
+      if (status === 'failed') return 'bg-red-50 text-red-700 border border-red-200';
+      return 'bg-slate-100 text-slate-600 border border-slate-200';
+    }
+
+    async function openProjectWorkspace(projectId) {
+      currentProjectId = projectId;
+      const res = await fetch(`/api/projects/${projectId}`);
+      const p = await res.json();
+      document.getElementById('breadcrumbProject').innerText = p.name;
+      document.getElementById('sidebarActiveProjectName').innerText = p.name;
+      document.getElementById('projectSwitcher').value = projectId;
+      navigateTo('input-spreadsheet');
+    }
+
+    function onSwitchProjectDropdown(projectId) {
+      if (!projectId) return;
+      openProjectWorkspace(projectId);
+    }
+
+    async function deleteProject(projectId) {
+      if (!confirm("Are you sure you want to delete this project and its datasets?")) return;
+      await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
+      if (currentProjectId === projectId) currentProjectId = null;
+      loadProjectsInventory();
+      loadDashboardData();
+    }
+
+    // ==========================================
+    // NEW PROJECT WIZARD & DATA IMPORT (STEP 1)
+    // ==========================================
+    async function startNewProjectWizard() {
+      const defaultName = `Catalog Scrape ${new Date().toLocaleDateString([], {month:'short', day:'numeric'})}`;
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: defaultName, platform: 'amazon' })
+      });
+      const data = await res.json();
+      currentProjectId = data.project.id;
+      document.getElementById('wizardProjectName').value = data.project.name;
+      document.getElementById('breadcrumbProject').innerText = data.project.name;
+      document.getElementById('sidebarActiveProjectName').innerText = data.project.name;
+      navigateTo('wizard');
+      setWizardStep(1);
+      loadProjectsInventory();
+    }
+
+    async function saveWizardProjectMeta() {
+      const name = document.getElementById('wizardProjectName').value.trim();
+      if (!currentProjectId || !name) return;
+      await fetch(`/api/projects/${currentProjectId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name })
+      });
+      document.getElementById('breadcrumbProject').innerText = name;
+      document.getElementById('sidebarActiveProjectName').innerText = name;
+      alert("Project name updated.");
+    }
+
+    function setWizardStep(step) {
+      wizardCurrentStep = step;
+      for (let s = 1; s <= 6; s++) {
+        const pill = document.getElementById(`step-pill-${s}`);
+        if (!pill) continue;
+        if (s === step) {
+          pill.className = "flex items-center space-x-1.5 text-slate-900 font-semibold cursor-pointer";
+          pill.querySelector('span').className = "w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px]";
+        } else if (s < step) {
+          pill.className = "flex items-center space-x-1.5 text-slate-600 font-medium cursor-pointer";
+          pill.querySelector('span').className = "w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]";
+        } else {
+          pill.className = "flex items-center space-x-1.5 text-slate-400 font-medium cursor-pointer";
+          pill.querySelector('span').className = "w-5 h-5 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-[10px]";
+        }
+      }
+
+      if (step === 2) navigateTo('input-spreadsheet');
+      if (step === 3 || step === 4) navigateTo('config');
+      if (step === 5 || step === 6) navigateTo('live');
+    }
+
+    async function uploadWizardFile(e) {
+      const file = e.target.files[0];
+      if (!file || !currentProjectId) return;
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/upload`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('wizardUploadFilename').innerText = data.filename;
+          document.getElementById('wizardUploadRowCount').innerText = `${data.total_rows.toLocaleString()} items`;
+          document.getElementById('wizardUploadFeedback').classList.remove('hidden');
+          alert(`Successfully imported ${data.total_rows.toLocaleString()} products.`);
+          setWizardStep(2);
+        }
+      } catch (err) {
+        alert("Upload error: " + err);
+      }
+    }
+
+    async function submitManualUrls() {
+      const raw = document.getElementById('wizardManualInput').value.trim();
+      if (!raw || !currentProjectId) return alert("Please enter product names or URLs.");
+
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/manual-urls`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls_or_names: raw })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`Imported ${data.total_rows} items into project spreadsheet.`);
+          setWizardStep(2);
+        }
+      } catch (err) {
+        alert("Parsing error: " + err);
+      }
+    }
+
+    // ==========================================
+    // STEP 2: INPUT SPREADSHEET EDITOR
+    // ==========================================
+    async function fetchInputSpreadsheet(page = 1) {
+      if (!currentProjectId) return;
+      inputPage = page;
+      const q = document.getElementById('inputSearchFilter').value;
+      const url = `/api/projects/${currentProjectId}/input/data?page=${page}&page_size=50&search=${encodeURIComponent(q)}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById('inputSheetBadge').innerText = `${data.total.toLocaleString()} rows`;
+        const start = (data.page - 1) * data.page_size + 1;
+        const end = Math.min(data.page * data.page_size, data.total);
+        document.getElementById('inputRangeText').innerText = data.total > 0 ? `${start}–${end}` : '0';
+        document.getElementById('inputTotalCountText').innerText = data.total.toLocaleString();
+        document.getElementById('inputPageIndicator').innerText = `Page ${data.page} of ${data.total_pages}`;
+
+        document.getElementById('btnInputPrev').disabled = (data.page <= 1);
+        document.getElementById('btnInputNext').disabled = (data.page >= data.total_pages);
+
+        // Update Target Mapping Select
+        const targetSelect = document.getElementById('inputMappingTargetCol');
+        targetSelect.innerHTML = `<option value="">Select Target Column...</option>` + data.columns.map(c => `
+          <option value="${c}">${c}</option>
+        `).join('');
+
+        // Build Table Header
+        const thead = document.getElementById('inputTableHead');
+        thead.innerHTML = `
+          <tr>
+            <th class="px-3 py-2 w-10 text-center border-r border-slate-200">
+              <input type="checkbox" onchange="toggleSelectAllInputs(this)" class="rounded border-slate-300">
+            </th>
+            <th class="px-3 py-2 w-12 text-slate-400 font-mono text-center border-r border-slate-200">#</th>
+            ${data.columns.map(c => `
+              <th class="px-3 py-2 border-r border-slate-200 font-semibold sheet-cell group">
+                <div class="flex items-center justify-between">
+                  <span>${c}</span>
+                  <div class="space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onclick="promptRenameColumn('input', '${c}')" class="text-[10px] text-slate-400 hover:text-slate-800" title="Rename"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="deleteColumn('input', '${c}')" class="text-[10px] text-slate-400 hover:text-red-600" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
+              </th>
+            `).join('')}
+          </tr>
+        `;
+
+        // Build Table Body
+        const tbody = document.getElementById('inputTableBody');
+        tbody.innerHTML = data.rows.map(r => `
+          <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+            <td class="px-3 py-1.5 text-center border-r border-slate-200">
+              <input type="checkbox" data-row-idx="${r.__row_idx__}" onchange="updateSelectedCount('input')" class="row-checkbox-input rounded border-slate-300">
+            </td>
+            <td class="px-3 py-1.5 text-slate-400 text-center font-mono border-r border-slate-200 bg-slate-50/50 text-[11px]">${r.__row_idx__ + 1}</td>
+            ${data.columns.map(c => `
+              <td contenteditable="true" onblur="onCellSave('input', ${r.__row_idx__}, '${c}', this)" class="px-3 py-1.5 border-r border-slate-200 sheet-cell text-slate-800">${r[c] || ''}</td>
+            `).join('')}
+          </tr>
+        `).join('');
+
+      } catch (err) {}
+    }
+
+    async function onCellSave(type, rowIdx, colName, el) {
+      const val = el.innerText.trim();
+      const endpoint = type === 'input' ? `/api/projects/${currentProjectId}/input/cell` : `/api/projects/${currentProjectId}/output/cell`;
+      try {
+        await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ row_idx: rowIdx, col_name: colName, new_val: val })
+        });
+      } catch (err) {}
+    }
+
+    async function promptAddColumn(type) {
+      const colName = prompt("Enter new column name:");
+      if (!colName) return;
+      await fetch(`/api/projects/${currentProjectId}/${type}/column/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ col_name: colName.trim() })
+      });
+      fetchInputSpreadsheet(inputPage);
+    }
+
+    async function promptRenameColumn(type, oldCol) {
+      const newCol = prompt(`Rename column '${oldCol}' to:`, oldCol);
+      if (!newCol || newCol === oldCol) return;
+      await fetch(`/api/projects/${currentProjectId}/${type}/column/rename`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ old_col: oldCol, new_col: newCol.trim() })
+      });
+      fetchInputSpreadsheet(inputPage);
+    }
+
+    async function deleteColumn(type, colName) {
+      if (!confirm(`Delete column '${colName}'? All data in this column will be removed.`)) return;
+      await fetch(`/api/projects/${currentProjectId}/${type}/column/${encodeURIComponent(colName)}`, { method: 'DELETE' });
+      fetchInputSpreadsheet(inputPage);
+    }
+
+    async function promptAddRow(type) {
+      await fetch(`/api/projects/${currentProjectId}/${type}/row/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ row_data: {} })
+      });
+      fetchInputSpreadsheet(inputPage);
+    }
+
+    function toggleSelectAllInputs(masterCheckbox) {
+      document.querySelectorAll('.row-checkbox-input').forEach(cb => cb.checked = masterCheckbox.checked);
+      updateSelectedCount('input');
+    }
+
+    function updateSelectedCount(type) {
+      const checked = document.querySelectorAll(`.row-checkbox-${type}:checked`);
+      const btn = document.getElementById(type === 'input' ? 'btnDelSelectedInput' : 'btnDelSelectedOutput');
+      if (btn) btn.disabled = (checked.length === 0);
+    }
+
+    async function deleteSelectedRows(type) {
+      const checked = Array.from(document.querySelectorAll(`.row-checkbox-${type}:checked`)).map(cb => parseInt(cb.dataset.rowIdx));
+      if (checked.length === 0) return;
+      if (!confirm(`Delete ${checked.length} selected rows?`)) return;
+
+      await fetch(`/api/projects/${currentProjectId}/${type}/rows/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ row_indices: checked })
+      });
+      fetchInputSpreadsheet(1);
+    }
+
+    async function onMappingColChange(val) {
+      if (!val || !currentProjectId) return;
+      await fetch(`/api/projects/${currentProjectId}/mapping`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mapping: { target_column: val } })
+      });
+    }
+
+    function onInputSearchChange() {
+      clearTimeout(window.inputSearchTimeout);
+      window.inputSearchTimeout = setTimeout(() => fetchInputSpreadsheet(1), 300);
+    }
+
+    function changeInputPage(delta) {
+      fetchInputSpreadsheet(inputPage + delta);
+    }
+
+    // ==========================================
+    // STEP 3 & 4: PLATFORMS & EXTRACTION CONFIG
+    // ==========================================
+    async function loadPlatformCards() {
+      const res = await fetch('/api/platforms');
+      const platforms = await res.json();
+      const container = document.getElementById('platformsContainer');
+      container.innerHTML = platforms.map(p => `
+        <div onclick="selectPlatform('${p.id}', '${p.status}')" class="p-4 rounded-xl border ${p.id === 'amazon' ? 'border-slate-900 bg-slate-50' : 'border-slate-200 bg-white'} ${p.status === 'ready' ? 'cursor-pointer hover:border-slate-400' : 'opacity-60 cursor-not-allowed'} transition-all flex flex-col justify-between space-y-2">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-semibold text-xs text-slate-900 flex items-center gap-1.5">
+                <i class="${p.icon} text-slate-700"></i> ${p.name}
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full font-medium ${p.status === 'ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}">
+                ${p.status_label}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-relaxed">${p.description}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function selectPlatform(platformId, status) {
+      if (status !== 'ready') return alert("This platform adapter is scheduled for upcoming enterprise update.");
+      if (!currentProjectId) return;
+      await fetch(`/api/projects/${currentProjectId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform: platformId })
+      });
+      loadPlatformCards();
+    }
+
+    async function loadConfigPresets() {
+      const res = await fetch('/api/presets');
+      const presets = await res.json();
+      const select = document.getElementById('configPresetSelect');
+      select.innerHTML = `<option value="">Load Config Preset...</option>` + presets.map(p => `
+        <option value="${p.id}">${p.name}</option>
+      `).join('');
+    }
+
+    async function loadProjectConfig(projectId) {
+      if (!projectId) return;
+      try {
+        const res = await fetch(`/api/projects/${projectId}`);
+        const p = await res.json();
+        const c = p.config || {};
+        if (document.getElementById('cfgVendor')) document.getElementById('cfgVendor').checked = c.fetch_vendor !== false;
+        if (document.getElementById('cfgImages')) document.getElementById('cfgImages').checked = c.fetch_images !== false;
+        if (document.getElementById('cfgMaxImages')) document.getElementById('cfgMaxImages').value = c.max_images || 5;
+        if (document.getElementById('cfgPricing')) document.getElementById('cfgPricing').checked = c.fetch_pricing !== false;
+        if (document.getElementById('cfgEstimateMissingPrice')) document.getElementById('cfgEstimateMissingPrice').checked = c.estimate_missing_price !== false;
+        if (document.getElementById('cfgPriceMargin')) document.getElementById('cfgPriceMargin').value = c.price_margin_pct || 0;
+        if (document.getElementById('cfgRoundPrice')) document.getElementById('cfgRoundPrice').checked = c.round_price !== false;
+        if (document.getElementById('cfgDesc')) document.getElementById('cfgDesc').checked = c.fetch_description !== false;
+        if (document.getElementById('cfgMaxBullets')) document.getElementById('cfgMaxBullets').value = c.max_bullets || 5;
+        if (document.getElementById('cfgTags')) document.getElementById('cfgTags').checked = c.fetch_tags !== false;
+        if (document.getElementById('cfgShopifyFormat')) document.getElementById('cfgShopifyFormat').checked = c.shopify_template_mode === true;
+      } catch (err) {
+        console.error("Failed to load project config:", err);
+      }
+    }
+
+    async function applyConfigPreset(presetId) {
+      if (!presetId) return;
+      const res = await fetch('/api/presets');
+      const presets = await res.json();
+      const p = presets.find(x => x.id === presetId);
+      if (!p) return;
+      const c = p.config;
+      document.getElementById('cfgVendor').checked = c.fetch_vendor !== false;
+      document.getElementById('cfgImages').checked = c.fetch_images !== false;
+      document.getElementById('cfgMaxImages').value = c.max_images || 5;
+      document.getElementById('cfgPricing').checked = c.fetch_pricing !== false;
+      document.getElementById('cfgEstimateMissingPrice').checked = c.estimate_missing_price !== false;
+      document.getElementById('cfgDesc').checked = c.fetch_description !== false;
+      document.getElementById('cfgTags').checked = c.fetch_tags !== false;
+      if (document.getElementById('cfgShopifyFormat')) document.getElementById('cfgShopifyFormat').checked = c.shopify_template_mode === true;
+    }
+
+    async function saveCurrentConfigPreset() {
+      const name = prompt("Enter Preset Name:", "Custom Extractor Config");
+      if (!name) return;
+      const config = {
+        fetch_vendor: document.getElementById('cfgVendor').checked,
+        fetch_images: document.getElementById('cfgImages').checked,
+        max_images: parseInt(document.getElementById('cfgMaxImages').value) || 5,
+        fetch_pricing: document.getElementById('cfgPricing').checked,
+        estimate_missing_price: document.getElementById('cfgEstimateMissingPrice').checked,
+        price_margin_pct: parseFloat(document.getElementById('cfgPriceMargin').value) || 0,
+        round_price: document.getElementById('cfgRoundPrice').checked,
+        fetch_description: document.getElementById('cfgDesc').checked,
+        max_bullets: parseInt(document.getElementById('cfgMaxBullets').value) || 5,
+        fetch_tags: document.getElementById('cfgTags').checked,
+        shopify_template_mode: document.getElementById('cfgShopifyFormat') ? document.getElementById('cfgShopifyFormat').checked : false
+      };
+
+      const presetId = `preset_${Date.now()}`;
+      await fetch('/api/presets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: presetId, name: name, config: config })
+      });
+      loadConfigPresets();
+      alert("Configuration preset saved.");
+    }
+
+    async function saveAndProceedToWorkers() {
+      if (!currentProjectId) return;
+      const isShopify = document.getElementById('cfgShopifyFormat') ? document.getElementById('cfgShopifyFormat').checked : false;
+      const config = {
+        fetch_vendor: document.getElementById('cfgVendor').checked,
+        fetch_images: document.getElementById('cfgImages').checked,
+        max_images: parseInt(document.getElementById('cfgMaxImages').value) || 5,
+        fetch_pricing: document.getElementById('cfgPricing').checked,
+        estimate_missing_price: document.getElementById('cfgEstimateMissingPrice').checked,
+        price_margin_pct: parseFloat(document.getElementById('cfgPriceMargin').value) || 0,
+        round_price: document.getElementById('cfgRoundPrice').checked,
+        fetch_description: document.getElementById('cfgDesc').checked,
+        max_bullets: parseInt(document.getElementById('cfgMaxBullets').value) || 5,
+        fetch_tags: document.getElementById('cfgTags').checked,
+        shopify_template_mode: isShopify
+      };
+
+      await fetch(`/api/projects/${currentProjectId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config: config })
+      });
+
+      // If official Shopify format was chosen, automatically re-create the output schema
+      if (isShopify) {
+        try {
+          await fetch(`/api/projects/${currentProjectId}/output/apply-shopify-template`, { method: 'POST' });
+        } catch (err) {}
+      }
+
+      navigateTo('live');
+    }
+
+    // ==========================================
+    // STEP 5 & 6: LIVE SCRAPING & WORKERS MONITOR
+    // ==========================================
+    async function launchScrapingJob() {
+      if (!currentProjectId) return alert("Select or create a project first.");
+      const concurrency = parseInt(document.getElementById('jobConcurrencySelect').value) || 2;
+      
+      const res = await fetch(`/api/projects/${currentProjectId}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ concurrency: concurrency })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        startLiveStatusPolling();
+      } else {
+        alert(data.detail || "Could not launch job.");
+      }
+    }
+
+    async function jobControl(action) {
+      if (!currentProjectId) return;
+      if (action === 'retry') {
+        const concurrency = parseInt(document.getElementById('jobConcurrencySelect').value) || 2;
+        await fetch(`/api/projects/${currentProjectId}/retry-failed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ concurrency: concurrency })
+        });
+        startLiveStatusPolling();
+      } else {
+        await fetch(`/api/projects/${currentProjectId}/${action}`, { method: 'POST' });
+      }
+    }
+
+    function startLiveStatusPolling() {
+      if (livePollInterval) clearInterval(livePollInterval);
+      livePollInterval = setInterval(async () => {
+        if (!currentProjectId) return;
+        try {
+          const res = await fetch(`/api/projects/${currentProjectId}/status`);
+          const st = await res.json();
+
+          document.getElementById('liveProgressPercent').innerText = `${st.progress_percent}%`;
+          document.getElementById('liveProcessedCount').innerText = st.processed_count;
+          document.getElementById('liveTotalCount').innerText = st.total_to_process;
+          document.getElementById('liveSpeed').innerText = st.speed_per_min;
+          document.getElementById('liveActiveWorkers').innerText = st.active_workers;
+          document.getElementById('liveElapsed').innerText = `${st.elapsed_seconds}s`;
+          document.getElementById('liveEta').innerText = st.eta_seconds > 0 ? `${st.eta_seconds}s` : '--';
+          document.getElementById('liveProgressBar').style.width = `${st.progress_percent}%`;
+
+          const dot = document.getElementById('liveStatusDot');
+          const btnPause = document.getElementById('btnJobPause');
+          const btnResume = document.getElementById('btnJobResume');
+          const btnStop = document.getElementById('btnJobStop');
+
+          if (st.is_running) {
+            dot.className = "w-2 h-2 rounded-full bg-slate-900 animate-pulse";
+            btnPause.disabled = false;
+            btnResume.disabled = true;
+            btnStop.disabled = false;
+          } else if (st.is_paused) {
+            dot.className = "w-2 h-2 rounded-full bg-amber-500";
+            btnPause.disabled = true;
+            btnResume.disabled = false;
+            btnStop.disabled = false;
+          } else {
+            dot.className = "w-2 h-2 rounded-full bg-slate-300";
+            btnPause.disabled = true;
+            btnResume.disabled = true;
+            btnStop.disabled = true;
+          }
+
+          // Render live logs
+          if (st.recent_logs && st.recent_logs.length > 0) {
+            const logsBox = document.getElementById('liveLogsContainer');
+            logsBox.innerHTML = st.recent_logs.map(l => `
+              <div class="flex items-start space-x-2">
+                <span class="text-slate-500 font-mono">[${l.time}]</span>
+                <span class="text-slate-400 font-mono">[${l.worker}]</span>
+                <span class="${l.level === 'error' ? 'text-red-400' : l.level === 'success' ? 'text-emerald-400' : 'text-slate-200'}">${l.message}</span>
+              </div>
+            `).join('');
+            logsBox.scrollTop = logsBox.scrollHeight;
+          }
+
+        } catch (err) {}
+      }, 1000);
+    }
+
+    // ==========================================
+    // STEP 7: OUTPUT SPREADSHEET (LIVE STREAMING)
+    // ==========================================
+    async function fetchOutputSpreadsheet(page = 1) {
+      if (!currentProjectId) return;
+      outputPage = page;
+      const q = document.getElementById('outputSearchFilter').value;
+      const status = document.getElementById('outputStatusFilter').value;
+      const url = `/api/projects/${currentProjectId}/output/data?page=${page}&page_size=50&search=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById('outputSheetBadge').innerText = `${data.total.toLocaleString()} rows`;
+        const start = (data.page - 1) * data.page_size + 1;
+        const end = Math.min(data.page * data.page_size, data.total);
+        document.getElementById('outputRangeText').innerText = data.total > 0 ? `${start}–${end}` : '0';
+        document.getElementById('outputTotalCountText').innerText = data.total.toLocaleString();
+        document.getElementById('outputPageIndicator').innerText = `Page ${data.page} of ${data.total_pages}`;
+
+        document.getElementById('btnOutputPrev').disabled = (data.page <= 1);
+        document.getElementById('btnOutputNext').disabled = (data.page >= data.total_pages);
+
+        // Header
+        const thead = document.getElementById('outputTableHead');
+        thead.innerHTML = `
+          <tr>
+            <th class="px-3 py-2 w-12 text-slate-400 font-mono text-center border-r border-slate-200">#</th>
+            <th class="px-3 py-2 border-r border-slate-200">Status</th>
+            ${data.columns.map(c => `
+              <th class="px-3 py-2 border-r border-slate-200 font-semibold sheet-cell">${c}</th>
+            `).join('')}
+          </tr>
+        `;
+
+        // Body
+        const tbody = document.getElementById('outputTableBody');
+        tbody.innerHTML = data.rows.map(r => `
+          <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+            <td class="px-3 py-1.5 text-slate-400 text-center font-mono border-r border-slate-200 bg-slate-50/50 text-[11px]">${r.__row_idx__ + 1}</td>
+            <td class="px-3 py-1.5 border-r border-slate-200">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusBadgeClass(r.__status__)}">
+                ${r.__status__}
+              </span>
+            </td>
+            ${data.columns.map(c => `
+              <td contenteditable="true" onblur="onCellSave('output', ${r.__row_idx__}, '${c}', this)" class="px-3 py-1.5 border-r border-slate-200 sheet-cell text-slate-800">${r[c] || ''}</td>
+            `).join('')}
+          </tr>
+        `).join('');
+
+      } catch (err) {}
+    }
+
+    function onOutputFilterChange() { fetchOutputSpreadsheet(1); }
+    function onOutputSearchChange() {
+      clearTimeout(window.outputSearchTimeout);
+      window.outputSearchTimeout = setTimeout(() => fetchOutputSpreadsheet(1), 300);
+    }
+    function changeOutputPage(delta) { fetchOutputSpreadsheet(outputPage + delta); }
+
+    async function applyShopifyTemplateAction() {
+      if (!currentProjectId) {
+        alert("Please select or open an active project first.");
+        return;
+      }
+      if (!confirm("Re-structure output spreadsheet according to the official 61-column Shopify Product CSV template?\nAll existing product data will be aligned and pre-populated with standard Shopify defaults.")) return;
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/output/apply-shopify-template`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          fetchOutputSpreadsheet(outputPage);
+        } else {
+          alert("Failed to apply Shopify template.");
+        }
+      } catch (err) {
+        alert("Network error applying Shopify template.");
+      }
+    }
+
+    async function addMissingShopifyColumnsAction() {
+      if (!currentProjectId) {
+        alert("Please select or open an active project first.");
+        return;
+      }
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/output/add-shopify-columns`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          fetchOutputSpreadsheet(outputPage);
+        } else {
+          alert("Failed to add Shopify columns.");
+        }
+      } catch (err) {
+        alert("Network error adding Shopify columns.");
+      }
+    }
+
+    async function resetStudioColumnsAction() {
+      if (!currentProjectId) {
+        alert("Please select or open an active project first.");
+        return;
+      }
+      if (!confirm("Reset spreadsheet columns to the clean operational Studio view?")) return;
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/output/reset-studio-template`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          fetchOutputSpreadsheet(outputPage);
+        } else {
+          alert("Failed to reset Studio view.");
+        }
+      } catch (err) {
+        alert("Network error resetting view.");
+      }
+    }
+
+    // ==========================================
+    // STEP 8: REVIEW & EXPORT
+    // ==========================================
+    async function downloadExport(format, scope) {
+      if (!currentProjectId) return alert("Select an active project first.");
+      const tok = localStorage.getItem('storehub_token') || '';
+      window.location.href = `/api/projects/${currentProjectId}/export?format=${format}&scope=${scope}&token=${encodeURIComponent(tok)}`;
+    }
+
+    // ==========================================
+    // NETWORK & HELPERS
+    // ==========================================
+    async function fetchNetworkInfo() {
+      try {
+        const res = await fetch('/api/network-info');
+        const data = await res.json();
+        document.getElementById('sidebarWifiIp').innerText = `${data.local_ip}:${data.port}`;
+        document.getElementById('settingsWifiUrl').innerText = data.wifi_url;
+
+        const qr = document.getElementById('settingsQrCode');
+        qr.innerHTML = '';
+        new QRCode(qr, { text: data.wifi_url, width: 140, height: 140, colorDark: "#0F172A", colorLight: "#FFFFFF" });
+      } catch (err) {}
+    }
+
+    function quickRefreshCurrentView() {
+      if (currentView === 'dashboard') loadDashboardData();
+      if (currentView === 'projects') loadProjectsInventory();
+      if (currentView === 'input-spreadsheet') fetchInputSpreadsheet(inputPage);
+      if (currentView === 'output-spreadsheet') fetchOutputSpreadsheet(outputPage);
+    }
+
+  </script>
+
+</body>
+</html>
