@@ -160,27 +160,32 @@
     <!-- BOTTOM CUSTOMER PROFILE & METRICS -->
     <div class="p-3 border-t border-slate-100 bg-slate-50/50">
       <!-- CUSTOMER ACCOUNT INFO -->
-      <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-200/60">
+      <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200/60">
         <div class="flex items-center space-x-2 min-w-0">
           <div id="sidebarUserAvatar" class="w-7 h-7 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0 tracking-wider">
-            C1
+            CU
           </div>
           <div class="min-w-0">
-            <div id="sidebarUserName" class="font-semibold text-xs text-slate-800 truncate">Customer 1</div>
-            <div id="sidebarUserEmail" class="text-[10px] text-slate-400 truncate">customer1@storehub.io</div>
+            <div id="sidebarUserName" class="font-semibold text-xs text-slate-800 truncate">Customer Account</div>
+            <div id="sidebarUserEmail" class="text-[10px] text-slate-400 truncate">Sign in to workspace</div>
           </div>
         </div>
-        <button onclick="openAuthModal()" class="text-[10px] font-medium text-slate-500 hover:text-slate-900 px-2 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 shadow-2xs transition-colors" title="Switch Customer Account">
-          <i class="fa-solid fa-repeat text-[9px] mr-1"></i>Switch
-        </button>
+        <div class="flex items-center space-x-1">
+          <button onclick="openAuthModal(true)" class="text-[10px] font-medium text-slate-500 hover:text-slate-900 px-1.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 shadow-2xs transition-colors" title="Switch or Manage Account">
+            <i class="fa-solid fa-user text-[9px]"></i>
+          </button>
+          <button onclick="handleSignOut()" class="text-[10px] font-medium text-slate-500 hover:text-red-600 px-1.5 py-1 rounded border border-slate-200 bg-white hover:bg-red-50 shadow-2xs transition-colors" title="Sign Out">
+            <i class="fa-solid fa-arrow-right-from-bracket text-[9px]"></i>
+          </button>
+        </div>
       </div>
 
       <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1.5">
         <span class="flex items-center gap-1.5 font-medium">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-          Vault Storage Isolated
+          Workspace Isolated
         </span>
-        <span id="sidebarTenantId" class="font-mono text-[10px] text-slate-400">usr_cust_1</span>
+        <span id="sidebarTenantId" class="font-mono text-[10px] text-slate-400">Active</span>
       </div>
       <div class="text-[10px] text-slate-400 flex justify-between">
         <span>Active Project:</span>
@@ -216,11 +221,16 @@
         </button>
 
         <!-- CUSTOMER VAULT BADGE -->
-        <button onclick="openAuthModal()" class="flex items-center space-x-2 px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs text-slate-700 transition-colors" title="Customer Workspace: Click to switch">
-          <i class="fa-solid fa-shield-halved text-emerald-600 text-[11px]"></i>
-          <span class="font-medium" id="topbarCustomerName">Customer 1 (Apex)</span>
-          <span class="text-[10px] text-slate-400 font-mono" id="topbarTenantId">[usr_cust_1]</span>
-          <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 ml-0.5"></i>
+        <button onclick="openAuthModal(true)" class="flex items-center space-x-2 px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs text-slate-700 transition-colors" title="Manage Account or Switch">
+          <i class="fa-solid fa-user-circle text-slate-600 text-xs"></i>
+          <span class="font-medium" id="topbarCustomerName">Guest</span>
+          <span class="text-[10px] text-slate-400 font-mono hidden md:inline" id="topbarTenantId"></span>
+        </button>
+
+        <!-- SIGN OUT BUTTON -->
+        <button onclick="handleSignOut()" id="btnTopSignOut" class="text-xs text-slate-500 hover:text-red-600 px-2 py-1 rounded-md border border-slate-200 bg-white hover:bg-red-50 transition-colors flex items-center space-x-1" title="Sign Out">
+          <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
+          <span class="hidden sm:inline">Sign Out</span>
         </button>
 
         <div class="flex items-center space-x-2">
@@ -1057,112 +1067,89 @@
   <!-- ======================================================= -->
   <!-- AUTHENTICATION & MULTI-TENANT ISOLATION MODAL           -->
   <!-- ======================================================= -->
-  <div id="authModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden">
+  <!-- ======================================================= -->
+  <!-- AUTHENTICATION (SIGN IN & SIGN UP) MODAL                -->
+  <!-- ======================================================= -->
+  <div id="authModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden transition-all">
       
       <!-- MODAL HEADER -->
-      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-7 h-7 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
-            <i class="fa-solid fa-lock text-[11px]"></i>
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+            <i class="fa-solid fa-layer-group text-slate-100"></i>
           </div>
           <div>
-            <h3 class="text-xs font-semibold text-slate-900">Customer Workspace Isolation</h3>
-            <p class="text-[10px] text-slate-500">Zero cross-contamination local storage</p>
+            <h3 class="text-sm font-semibold text-slate-900">StoreHub Account</h3>
+            <p class="text-[11px] text-slate-500">Sign in or register your workspace</p>
           </div>
         </div>
-        <button onclick="closeAuthModal()" id="btnAuthClose" class="text-slate-400 hover:text-slate-600 p-1 rounded-md text-xs">
-          <i class="fa-solid fa-xmark"></i>
+        <button onclick="closeAuthModal()" id="btnAuthClose" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Close">
+          <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
-      <!-- ZERO CONTAMINATION NOTICE -->
-      <div class="p-5 space-y-4">
-        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
-          <div class="font-semibold text-slate-900 flex items-center gap-1.5">
-            <i class="fa-solid fa-shield-check text-emerald-600"></i>
-            Physical & Local Storage Isolation Guarantee
-          </div>
-          <p class="leading-relaxed text-slate-500 text-[11px]">
-            Customer data is stored in isolated local vaults on disk (<code class="font-mono text-[10px] text-slate-700 bg-white px-1 py-0.5 rounded border border-slate-200">user_data/{user_id}/</code>). Customer 2 cannot access or view Customer 1's data.
-          </p>
-        </div>
-
+      <div class="p-6 space-y-4">
         <!-- AUTH TABS -->
-        <div class="flex border-b border-slate-200">
-          <button onclick="switchAuthTab('signin')" id="tabSignIn" class="flex-1 pb-2 font-medium text-xs text-slate-900 border-b-2 border-slate-900 text-center">
+        <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-lg text-xs font-medium">
+          <button type="button" onclick="switchAuthTab('signin')" id="tabSignIn" class="py-1.5 rounded-md bg-white text-slate-900 shadow-2xs font-semibold transition-all">
             Sign In
           </button>
-          <button onclick="switchAuthTab('register')" id="tabRegister" class="flex-1 pb-2 font-medium text-xs text-slate-400 hover:text-slate-700 text-center">
+          <button type="button" onclick="switchAuthTab('register')" id="tabRegister" class="py-1.5 rounded-md text-slate-500 hover:text-slate-900 transition-all">
             Create Account
           </button>
         </div>
 
         <!-- SIGN IN FORM -->
-        <form id="formSignIn" onsubmit="handleSignInSubmit(event)" class="space-y-3">
+        <form id="formSignIn" onsubmit="handleSignInSubmit(event)" class="space-y-3.5">
+          <div id="authSignInError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg font-medium"></div>
+
           <div>
-            <label class="block text-[11px] font-medium text-slate-700 mb-1">Customer Email</label>
-            <input type="email" id="authLoginEmail" required placeholder="customer1@storehub.io" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+            <label class="block text-[11px] font-medium text-slate-700 mb-1">Email Address</label>
+            <input type="email" id="authLoginEmail" required placeholder="name@company.com" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all">
           </div>
           <div>
             <label class="block text-[11px] font-medium text-slate-700 mb-1">Password</label>
-            <input type="password" id="authLoginPass" required placeholder="••••••••" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+            <input type="password" id="authLoginPass" required placeholder="••••••••" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all">
           </div>
-          <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold shadow-xs transition-colors">
-            Sign In to Private Workspace
+          <button type="submit" id="btnSubmitSignIn" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors">
+            Sign In to Workspace
           </button>
         </form>
 
         <!-- REGISTER FORM (HIDDEN) -->
-        <form id="formRegister" onsubmit="handleRegisterSubmit(event)" class="space-y-3 hidden">
+        <form id="formRegister" onsubmit="handleRegisterSubmit(event)" class="space-y-3.5 hidden">
+          <div id="authSignUpError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg font-medium"></div>
+
           <div>
-            <label class="block text-[11px] font-medium text-slate-700 mb-1">Customer / Company Name</label>
-            <input type="text" id="authRegName" required placeholder="Acme Brands" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+            <label class="block text-[11px] font-medium text-slate-700 mb-1">Your Name / Brand Name</label>
+            <input type="text" id="authRegName" required placeholder="e.g. Acme Stores" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all">
           </div>
           <div>
-            <label class="block text-[11px] font-medium text-slate-700 mb-1">Customer Email</label>
-            <input type="email" id="authRegEmail" required placeholder="owner@acme.com" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+            <label class="block text-[11px] font-medium text-slate-700 mb-1">Email Address</label>
+            <input type="email" id="authRegEmail" required placeholder="name@company.com" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all">
           </div>
           <div>
-            <label class="block text-[11px] font-medium text-slate-700 mb-1">Password (min 6 chars)</label>
-            <input type="password" id="authRegPass" required placeholder="••••••••" class="w-full text-xs px-3 py-2 rounded-md border border-slate-200 bg-white focus:outline-none focus:border-slate-400">
+            <label class="block text-[11px] font-medium text-slate-700 mb-1">Password (min 6 characters)</label>
+            <input type="password" id="authRegPass" required placeholder="••••••••" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all">
           </div>
-          <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold shadow-xs transition-colors">
-            Create Isolated Workspace
+          <button type="submit" id="btnSubmitSignUp" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors">
+            Create Free Account
           </button>
         </form>
 
-        <!-- 1-CLICK DEMO TEST SWITCHER -->
-        <div class="pt-3 border-t border-slate-100">
-          <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-            1-Click Test Customer Switcher (Verify Isolation)
-          </div>
-          <div class="space-y-1.5">
-            <button type="button" onclick="quickSwitchCustomer('customer1@storehub.io', 'Password123!')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-slate-400 bg-white hover:bg-slate-50 transition-all flex items-center justify-between">
-              <div>
-                <div class="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-slate-900"></span>
-                  Customer 1: Apex Retailers
-                </div>
-                <div class="text-[10px] text-slate-500">Pre-loaded catalog & active projects</div>
-              </div>
-              <span class="text-[10px] text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded">usr_cust_1</span>
-            </button>
-
-            <button type="button" onclick="quickSwitchCustomer('customer2@storehub.io', 'Password123!')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-slate-400 bg-white hover:bg-slate-50 transition-all flex items-center justify-between">
-              <div>
-                <div class="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-                  Customer 2: Nova Brands
-                </div>
-                <div class="text-[10px] text-slate-500">100% clean slate, zero projects, separate folder</div>
-              </div>
-              <span class="text-[10px] text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded">usr_cust_2</span>
-            </button>
-          </div>
+        <!-- DEMO TEST SHORTCUT -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+          <span>Need a quick test login?</span>
+          <button type="button" onclick="fillDemoCredentials()" class="text-blue-600 hover:text-blue-700 font-medium hover:underline">
+            Use Demo Account
+          </button>
         </div>
 
       </div>
+
+    </div>
+  </div>
 
     </div>
   </div>
@@ -1229,12 +1216,22 @@
       }
     }
 
-    function openAuthModal() {
-      document.getElementById('authModal').classList.remove('hidden');
+    function openAuthModal(canClose = true) {
+      const modal = document.getElementById('authModal');
+      const closeBtn = document.getElementById('btnAuthClose');
+      const err1 = document.getElementById('authSignInError');
+      const err2 = document.getElementById('authSignUpError');
+      if (err1) { err1.classList.add('hidden'); err1.innerText = ''; }
+      if (err2) { err2.classList.add('hidden'); err2.innerText = ''; }
+
+      if (closeBtn) {
+        closeBtn.classList.toggle('hidden', !canClose && !currentUser);
+      }
+      modal.classList.remove('hidden');
     }
 
     function closeAuthModal() {
-      if (!currentUser) return; // Must have an active user
+      if (!currentUser) return; // Must have an active user to dismiss
       document.getElementById('authModal').classList.add('hidden');
     }
 
@@ -1242,14 +1239,17 @@
       const isSignIn = (tab === 'signin');
       document.getElementById('formSignIn').classList.toggle('hidden', !isSignIn);
       document.getElementById('formRegister').classList.toggle('hidden', isSignIn);
-      
-      document.getElementById('tabSignIn').className = isSignIn
-        ? 'flex-1 pb-2 font-medium text-xs text-slate-900 border-b-2 border-slate-900 text-center'
-        : 'flex-1 pb-2 font-medium text-xs text-slate-400 hover:text-slate-700 text-center';
 
-      document.getElementById('tabRegister').className = !isSignIn
-        ? 'flex-1 pb-2 font-medium text-xs text-slate-900 border-b-2 border-slate-900 text-center'
-        : 'flex-1 pb-2 font-medium text-xs text-slate-400 hover:text-slate-700 text-center';
+      const tabSign = document.getElementById('tabSignIn');
+      const tabReg = document.getElementById('tabRegister');
+      
+      if (isSignIn) {
+        tabSign.className = "py-1.5 rounded-md bg-white text-slate-900 shadow-2xs font-semibold transition-all";
+        tabReg.className = "py-1.5 rounded-md text-slate-500 hover:text-slate-900 transition-all font-medium";
+      } else {
+        tabReg.className = "py-1.5 rounded-md bg-white text-slate-900 shadow-2xs font-semibold transition-all";
+        tabSign.className = "py-1.5 rounded-md text-slate-500 hover:text-slate-900 transition-all font-medium";
+      }
     }
 
     function updateCurrentUserUI(user, token) {
@@ -1268,47 +1268,67 @@
       document.getElementById('topbarTenantId').innerText = `[${user.id}]`;
     }
 
-    async function quickSwitchCustomer(email, password) {
+    async function handleSignInSubmit(e) {
+      e.preventDefault();
+      const errBox = document.getElementById('authSignInError');
+      const btn = document.getElementById('btnSubmitSignIn');
+      errBox.classList.add('hidden');
+      errBox.innerText = '';
+
+      const email = document.getElementById('authLoginEmail').value.trim();
+      const pass = document.getElementById('authLoginPass').value;
+      if (!email || !pass) return;
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs mr-1"></i> <span>Signing in...</span>`;
+
       try {
         const res = await _originalFetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, password: password })
+          body: JSON.stringify({ email: email, password: pass })
         });
         const data = await res.json();
-        if (data.success) {
-          // Reset workspace state on customer switch
+        if (res.ok && data.success) {
           currentProjectId = null;
-          document.getElementById('breadcrumbProject').innerText = 'Overview';
-          document.getElementById('sidebarActiveProjectName').innerText = 'None';
-          
           updateCurrentUserUI(data.user, data.token);
           closeAuthModal();
-
-          // Reload workspace for new customer
           await loadDashboardData();
           await loadProjectsInventory();
           navigateTo('dashboard');
         } else {
-          alert(data.detail || "Login failed.");
+          errBox.innerText = data.detail || "Invalid email or password. Please try again.";
+          errBox.classList.remove('hidden');
         }
       } catch (err) {
-        alert("Authentication error: " + err);
+        errBox.innerText = "Network error connecting to auth service: " + err.message;
+        errBox.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Sign In to Workspace</span>`;
       }
-    }
-
-    async function handleSignInSubmit(e) {
-      e.preventDefault();
-      const email = document.getElementById('authLoginEmail').value.trim();
-      const pass = document.getElementById('authLoginPass').value;
-      await quickSwitchCustomer(email, pass);
     }
 
     async function handleRegisterSubmit(e) {
       e.preventDefault();
+      const errBox = document.getElementById('authSignUpError');
+      const btn = document.getElementById('btnSubmitSignUp');
+      errBox.classList.add('hidden');
+      errBox.innerText = '';
+
       const name = document.getElementById('authRegName').value.trim();
       const email = document.getElementById('authRegEmail').value.trim();
       const pass = document.getElementById('authRegPass').value;
+
+      if (!name || !email || !pass) return;
+      if (pass.length < 6) {
+        errBox.innerText = "Password must be at least 6 characters long.";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs mr-1"></i> <span>Creating account...</span>`;
 
       try {
         const res = await _originalFetch('/api/auth/register', {
@@ -1317,20 +1337,49 @@
           body: JSON.stringify({ name: name, email: email, password: pass })
         });
         const data = await res.json();
-        if (data.success) {
+        if (res.ok && data.success) {
           currentProjectId = null;
           updateCurrentUserUI(data.user, data.token);
           closeAuthModal();
           await loadDashboardData();
           await loadProjectsInventory();
           navigateTo('dashboard');
-          alert(`Welcome to your private workspace, ${name}!`);
         } else {
-          alert(data.detail || "Registration failed.");
+          errBox.innerText = data.detail || "Registration failed. That email might already be registered.";
+          errBox.classList.remove('hidden');
         }
       } catch (err) {
-        alert("Registration error: " + err);
+        errBox.innerText = "Network error connecting to auth service: " + err.message;
+        errBox.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Create Free Account</span>`;
       }
+    }
+
+    function handleSignOut() {
+      if (!confirm("Are you sure you want to sign out?")) return;
+      localStorage.removeItem('storehub_token');
+      localStorage.removeItem('storehub_current_user');
+      currentUser = null;
+      authToken = null;
+      currentProjectId = null;
+
+      document.getElementById('topbarCustomerName').innerText = 'Signed Out';
+      document.getElementById('topbarTenantId').innerText = '';
+      document.getElementById('sidebarUserName').innerText = 'Not Signed In';
+      document.getElementById('sidebarUserEmail').innerText = 'Sign in to access projects';
+      document.getElementById('sidebarUserAvatar').innerText = '--';
+      document.getElementById('sidebarTenantId').innerText = 'None';
+      document.getElementById('sidebarActiveProjectName').innerText = 'None';
+
+      openAuthModal(false);
+    }
+
+    function fillDemoCredentials() {
+      switchAuthTab('signin');
+      document.getElementById('authLoginEmail').value = 'customer1@storehub.io';
+      document.getElementById('authLoginPass').value = 'Password123!';
     }
 
     async function initAuth() {
@@ -1343,12 +1392,16 @@
           if (res.ok) {
             const data = await res.json();
             updateCurrentUserUI(data.user, storedToken);
+            closeAuthModal();
             return;
           }
         } catch (e) {}
       }
-      // If no valid stored session, auto-login into Customer 1 as default
-      await quickSwitchCustomer('customer1@storehub.io', 'Password123!');
+
+      // If no valid stored session, show the sign-in modal
+      currentUser = null;
+      authToken = null;
+      openAuthModal(false);
     }
 
     // ==========================================
