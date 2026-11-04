@@ -209,6 +209,12 @@
 
       <!-- PROJECT SWITCHER & CUSTOMER VAULT PILL -->
       <div class="flex items-center space-x-3">
+        <!-- RENDER SERVER HEALTH & WAKE-UP PILL -->
+        <button id="btnServerStatus" onclick="manualServerWakeCheck()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-medium transition-all shadow-2xs" title="Server Connection Health. Click to refresh/wake up.">
+          <span id="serverStatusDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="serverStatusText">Online</span>
+        </button>
+
         <!-- CUSTOMER VAULT BADGE -->
         <button onclick="openAuthModal()" class="flex items-center space-x-2 px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs text-slate-700 transition-colors" title="Customer Workspace: Click to switch">
           <i class="fa-solid fa-shield-halved text-emerald-600 text-[11px]"></i>
@@ -230,6 +236,21 @@
       </div>
 
     </header>
+
+    <!-- SERVER SLEEPING / WAKE-UP BANNER -->
+    <div id="serverSleepingBanner" class="hidden bg-amber-50 border-b border-amber-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-amber-900 transition-all">
+      <div class="flex items-center space-x-2.5">
+        <span class="flex h-2.5 w-2.5 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+        </span>
+        <span id="serverSleepingMsg"><strong>Render Server is Asleep:</strong> The backend spun down to save free-tier resources. Click below to start the server!</span>
+      </div>
+      <button onclick="wakeUpServerManual()" id="btnWakeUpBanner" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md shadow-xs flex items-center space-x-1.5 transition-colors">
+        <i class="fa-solid fa-bolt text-[11px]"></i>
+        <span>Start Server Now</span>
+      </button>
+    </div>
 
     <!-- CONTENT CONTAINER -->
     <main class="flex-1 p-6 max-w-7xl w-full mx-auto">
@@ -1330,8 +1351,123 @@
       await quickSwitchCustomer('customer1@storehub.io', 'Password123!');
     }
 
+    // ==========================================
+    // SERVER HEALTH, KEEP-ALIVE & WAKE-UP LOGIC
+    // ==========================================
+    let isServerWakingUp = false;
+    let wakePollingInterval = null;
+
+    async function checkServerHealth(silent = false) {
+      const btn = document.getElementById('btnServerStatus');
+      const dot = document.getElementById('serverStatusDot');
+      const txt = document.getElementById('serverStatusText');
+      const banner = document.getElementById('serverSleepingBanner');
+      if (!btn) return false;
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const t0 = performance.now();
+        const res = await fetch('/api/ping', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const latency = Math.round(performance.now() - t0);
+          btn.className = "flex items-center space-x-1.5 px-2.5 py-1 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-medium transition-all shadow-2xs";
+          dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+          txt.innerText = `Online (${latency}ms)`;
+          banner.classList.add('hidden');
+          return true;
+        }
+      } catch (err) {
+        // Server unreachable or sleeping
+      }
+
+      btn.className = "flex items-center space-x-1.5 px-2.5 py-1 rounded-md border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 text-xs font-medium transition-all shadow-2xs cursor-pointer";
+      dot.className = "w-2 h-2 rounded-full bg-amber-500";
+      txt.innerText = "Sleeping ⚡ Wake";
+      banner.classList.remove('hidden');
+      return false;
+    }
+
+    async function manualServerWakeCheck() {
+      const txt = document.getElementById('serverStatusText');
+      txt.innerText = "Checking...";
+      const isOnline = await checkServerHealth();
+      if (!isOnline) {
+        wakeUpServerManual();
+      }
+    }
+
+    async function wakeUpServerManual() {
+      if (isServerWakingUp) return;
+      isServerWakingUp = true;
+
+      const txt = document.getElementById('serverStatusText');
+      const banner = document.getElementById('serverSleepingBanner');
+      const msg = document.getElementById('serverSleepingMsg');
+      const wakeBtn = document.getElementById('btnWakeUpBanner');
+
+      banner.classList.remove('hidden');
+      wakeBtn.disabled = true;
+      wakeBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Starting...</span>`;
+
+      let attempt = 1;
+      msg.innerHTML = `<strong>Waking up Render server...</strong> Cold boot takes ~25-45 seconds on Render free tier. Polling server (attempt ${attempt})...`;
+
+      if (wakePollingInterval) clearInterval(wakePollingInterval);
+
+      wakePollingInterval = setInterval(async () => {
+        attempt++;
+        msg.innerHTML = `<strong>Waking up Render server...</strong> Cold boot takes ~25-45 seconds. Polling server (attempt ${attempt})...`;
+        txt.innerText = `Waking (${attempt})...`;
+
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
+          const res = await fetch('/api/ping', { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            clearInterval(wakePollingInterval);
+            wakePollingInterval = null;
+            isServerWakingUp = false;
+
+            msg.innerHTML = `<strong>✅ Server is Awake and Ready!</strong> Syncing live data...`;
+            setTimeout(() => {
+              banner.classList.add('hidden');
+              wakeBtn.disabled = false;
+              wakeBtn.innerHTML = `<i class="fa-solid fa-bolt text-[11px]"></i> <span>Start Server Now</span>`;
+            }, 2000);
+
+            await checkServerHealth();
+            quickRefreshCurrentView();
+          }
+        } catch (e) {
+          // Still spinning up
+        }
+
+        if (attempt > 30) {
+          clearInterval(wakePollingInterval);
+          wakePollingInterval = null;
+          isServerWakingUp = false;
+          msg.innerHTML = `<strong>Server startup is taking longer than expected.</strong> Please wait a moment and try again.`;
+          wakeBtn.disabled = false;
+          wakeBtn.innerHTML = `<i class="fa-solid fa-rotate-right text-xs"></i> <span>Retry</span>`;
+        }
+      }, 3000);
+    }
+
+    // Tab Heartbeat Pinger: Prevents Render idle timeout while browser tab is open
+    setInterval(async () => {
+      try {
+        await fetch('/api/ping');
+      } catch (e) {}
+    }, 300000); // Every 5 minutes
+
     // INITIALIZATION
     window.addEventListener('DOMContentLoaded', async () => {
+      checkServerHealth();
       await initAuth();
       await loadDashboardData();
       await loadProjectsInventory();

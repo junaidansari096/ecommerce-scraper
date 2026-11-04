@@ -1,6 +1,7 @@
 import os
 import io
 import sys
+import time
 import uuid
 import socket
 import uvicorn
@@ -34,6 +35,42 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# -------------------------------------------------------------
+# HEALTH CHECK & RENDER KEEP-ALIVE DAEMON
+# -------------------------------------------------------------
+SERVER_START_TIME = time.time()
+
+@app.get("/api/ping")
+@app.get("/api/health")
+async def ping_health():
+    return {
+        "status": "online",
+        "service": "storehub-platform",
+        "timestamp": time.time(),
+        "uptime_seconds": int(time.time() - SERVER_START_TIME)
+    }
+
+def _start_self_keepalive_daemon():
+    url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("SELF_PING_URL")
+    if not url:
+        return
+    import threading
+    import urllib.request
+    def _keepalive_loop():
+        target = f"{url.rstrip('/')}/api/ping"
+        while True:
+            time.sleep(600)  # Ping every 10 minutes (prevents 15m idle sleep)
+            try:
+                req = urllib.request.Request(target, headers={"User-Agent": "StoreHub-KeepAlive/1.0"})
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    pass
+            except Exception:
+                pass
+    t = threading.Thread(target=_keepalive_loop, daemon=True)
+    t.start()
+
+_start_self_keepalive_daemon()
 
 # Authentication & Multi-Tenant Isolated Storage
 auth_mgr = AuthManager()
