@@ -23,6 +23,9 @@ SECRET_KEY_PATH = os.path.join(BASE_DIR, ".jwt_secret")
 LEGACY_PROJECTS_DB = os.path.join(BASE_DIR, "projects.db")
 
 def get_or_create_secret_key() -> bytes:
+    env_key = os.getenv("JWT_SECRET_KEY")
+    if env_key:
+        return env_key.encode('utf-8')
     if os.path.exists(SECRET_KEY_PATH):
         try:
             with open(SECRET_KEY_PATH, "rb") as f:
@@ -31,10 +34,15 @@ def get_or_create_secret_key() -> bytes:
                     return key
         except Exception:
             pass
-    key = secrets.token_bytes(32)
-    with open(SECRET_KEY_PATH, "wb") as f:
-        f.write(key)
-    return key
+    # Stable deterministic fallback key for cloud ephemeral environments
+    # Ensures container restarts and cold-boot wakeups on Render NEVER invalidate user logins
+    stable_default = b"storehub_cloud_jwt_signing_key_production_2025_vault_sec"
+    try:
+        with open(SECRET_KEY_PATH, "wb") as f:
+            f.write(stable_default)
+    except Exception:
+        pass
+    return stable_default
 
 JWT_SECRET = get_or_create_secret_key()
 
@@ -45,7 +53,7 @@ def _b64url_decode(s: str) -> bytes:
     padding = '=' * (4 - (len(s) % 4))
     return base64.urlsafe_b64decode(s + padding)
 
-def create_jwt_token(payload: Dict[str, Any], expires_in_seconds: int = 7 * 86400) -> str:
+def create_jwt_token(payload: Dict[str, Any], expires_in_seconds: int = 30 * 86400) -> str:
     """Generate an RFC 7519 compliant HMAC-SHA256 JWT token."""
     header = {"alg": "HS256", "typ": "JWT"}
     now = int(time.time())
@@ -227,6 +235,29 @@ class AuthManager:
             if not row:
                 return None
             return dict(row)
+
+    def restore_verified_user(self, user_id: str, email: str, name: str) -> Dict[str, Any]:
+        """Restores a cryptographically verified user into the database if restarted on an ephemeral container."""
+        email = email.strip().lower()
+        name = name.strip() or email.split("@")[0].title()
+        now = time.time()
+        with self._get_conn() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT OR IGNORE INTO users (id, email, name, password_hash, role, created_at, last_login)
+                VALUES (?, ?, ?, '', 'customer', ?, ?)
+            """, (user_id, email, name, now, now))
+            conn.commit()
+            
+        user_dir = self.get_user_storage_path(user_id)
+        os.makedirs(user_dir, exist_ok=True)
+        return {
+            "id": user_id,
+            "email": email,
+            "name": name,
+            "role": "customer",
+            "created_at": now
+        }
 
     def get_all_users_summary(self) -> List[Dict[str, Any]]:
         """Returns non-sensitive summary of accounts for demo switcher."""

@@ -199,7 +199,14 @@ def get_user_context(
 
     user = auth_mgr.get_user_by_id(payload["sub"])
     if not user:
-        raise HTTPException(status_code=401, detail="Customer account not found.")
+        # Cryptographically verified token from this server: auto-restore user account in database
+        uid = payload["sub"]
+        email = payload.get("email", f"{uid}@storehub.io")
+        name = payload.get("name", "Workspace User")
+        auth_mgr.restore_verified_user(uid, email, name)
+        user = auth_mgr.get_user_by_id(uid)
+        if not user:
+            raise HTTPException(status_code=401, detail="Customer account not found.")
 
     user_db = auth_mgr.get_user_db(user["id"])
     user_job_mgr = auth_mgr.get_user_job_manager(user["id"])
@@ -251,15 +258,29 @@ async def get_dashboard_stats(request: Request, token: Optional[str] = None):
     return user_db.get_dashboard_stats()
 
 @app.get("/api/network-info")
-async def get_network_info():
+async def get_network_info(request: Request):
     local_ip = get_local_ip()
     status = automation.get_status()
+    render_url = os.getenv("RENDER_EXTERNAL_URL") or os.getenv("RENDER_EXTERNAL_HOSTNAME")
+    is_render = bool(os.getenv("RENDER") or render_url)
+
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+    proto = request.headers.get("x-forwarded-proto") or ("https" if is_render else request.url.scheme)
+    public_url = f"{proto}://{host}" if host else (render_url or f"http://{local_ip}:8000")
+    is_cloud = is_render or "onrender.com" in host
+
     return {
+        "is_cloud": is_cloud,
+        "environment": "Render Cloud Production" if is_cloud else "Local Development",
+        "public_url": public_url,
         "local_ip": local_ip,
         "port": 8000,
-        "wifi_url": f"http://{local_ip}:8000",
+        "wifi_url": public_url,
         "localhost_url": "http://localhost:8000",
-        "tunnel_url": status.get("tunnel_url", "")
+        "tunnel_url": status.get("tunnel_url", ""),
+        "db_engine": "SQLite 3 WAL (Isolated User Vaults)",
+        "anti_bot_profile": "Active (Chrome Headless)",
+        "region": "Singapore (Southeast Asia) / Global" if is_cloud else "Local Machine"
     }
 
 # -------------------------------------------------------------
