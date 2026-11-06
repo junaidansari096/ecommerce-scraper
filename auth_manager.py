@@ -111,6 +111,12 @@ class AuthManager:
         self._user_job_mgrs: Dict[str, ProjectJobManager] = {}
         self._user_exporters: Dict[str, ProjectExporter] = {}
 
+    def is_testing_mode(self) -> bool:
+        return IS_TESTING
+
+    def get_environment_name(self) -> str:
+        return APP_ENV
+
     def _get_conn(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
         conn.row_factory = sqlite3.Row
