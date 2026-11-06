@@ -214,6 +214,12 @@
 
       <!-- PROJECT SWITCHER & CUSTOMER VAULT PILL -->
       <div class="flex items-center space-x-3">
+        <!-- ENVIRONMENT BADGE (PRODUCTION VS TESTING) -->
+        <div id="topbarEnvBadge" class="hidden sm:flex items-center space-x-1.5 px-2 py-1 rounded-md text-[11px] font-semibold border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-2xs">
+          <span id="topbarEnvDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span id="topbarEnvText">Production</span>
+        </div>
+
         <!-- RENDER SERVER HEALTH & WAKE-UP PILL -->
         <button id="btnServerStatus" onclick="manualServerWakeCheck()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-medium transition-all shadow-2xs" title="Server Connection Health. Click to refresh/wake up.">
           <span id="serverStatusDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1021,13 +1027,24 @@
             <p class="text-xs text-slate-500 mt-0.5">Live deployment endpoint, isolated customer vault storage, and crawler cluster status.</p>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span>
-              Live Production
+            <span id="settingsStatusPill" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span id="settingsStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span>
+              <span id="settingsStatusText">Live Production</span>
             </span>
             <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 font-mono">
               v3.5 Cloud
             </span>
+          </div>
+        </div>
+
+        <!-- TESTING SANDBOX NOTICE BANNER (SHOWN ONLY IN TESTING/STAGING) -->
+        <div id="settingsTestingBanner" class="hidden p-4 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 text-xs flex items-start gap-3">
+          <i class="fa-solid fa-flask-vial text-amber-600 text-base mt-0.5"></i>
+          <div>
+            <div class="font-bold text-amber-950">🧪 Testing Sandbox Environment Active</div>
+            <div class="text-[11px] text-amber-800 mt-0.5">
+              You are currently operating in the isolated test environment. All scrapers, mock jobs, and project edits are strictly saved in <code class="px-1.5 py-0.5 rounded bg-amber-100 font-mono text-[10px]">user_data_test/</code> and will not affect live production customer vaults.
+            </div>
           </div>
         </div>
 
@@ -1285,6 +1302,7 @@
     let inputPage = 1;
     let outputPage = 1;
     let livePollInterval = null;
+    let isTestingMode = false;
 
     // AUTHENTICATION & SECURE LOCAL STORAGE STATE
     let currentUser = null;
@@ -2524,14 +2542,56 @@
       try {
         const res = await fetch('/api/network-info');
         const data = await res.json();
-        if (data.is_cloud) {
-          const envBadge = document.getElementById('settingsEnvBadge');
-          if (envBadge) envBadge.innerText = data.environment || 'Render Cloud';
-          const hostInfo = document.getElementById('settingsHostInfo');
-          if (hostInfo) hostInfo.innerText = data.environment || 'Render Cloud Web Service';
-          const regInfo = document.getElementById('settingsRegion');
-          if (regInfo && data.region) regInfo.innerText = data.region;
+        isTestingMode = !!data.is_testing;
+
+        // Topbar environment badge
+        const topBadge = document.getElementById('topbarEnvBadge');
+        const topDot = document.getElementById('topbarEnvDot');
+        const topText = document.getElementById('topbarEnvText');
+        if (topBadge && topDot && topText) {
+          if (isTestingMode) {
+            topBadge.className = "hidden sm:flex items-center space-x-1.5 px-2 py-1 rounded-md text-[11px] font-semibold border border-amber-300 bg-amber-50 text-amber-800 shadow-2xs";
+            topDot.className = "w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse";
+            topText.innerText = "🧪 Testing Sandbox";
+          } else {
+            topBadge.className = "hidden sm:flex items-center space-x-1.5 px-2 py-1 rounded-md text-[11px] font-semibold border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-2xs";
+            topDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
+            topText.innerText = "Production";
+          }
         }
+
+        // Settings view badges & storage indicators
+        const sPill = document.getElementById('settingsStatusPill');
+        const sDot = document.getElementById('settingsStatusDot');
+        const sText = document.getElementById('settingsStatusText');
+        if (sPill && sDot && sText) {
+          if (isTestingMode) {
+            sPill.className = "inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-800 border border-amber-300";
+            sDot.className = "w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5";
+            sText.innerText = "Testing Sandbox";
+          } else {
+            sPill.className = "inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
+            sDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5";
+            sText.innerText = "Live Production";
+          }
+        }
+
+        const testBanner = document.getElementById('settingsTestingBanner');
+        if (testBanner) {
+          testBanner.classList.toggle('hidden', !isTestingMode);
+        }
+
+        const vaultEl = document.getElementById('settingsVaultPath');
+        if (vaultEl && currentUser) {
+          vaultEl.innerText = `${data.storage_root || (isTestingMode ? 'user_data_test/' : 'user_data/')}${currentUser.id}/projects.db`;
+        }
+
+        const envBadge = document.getElementById('settingsEnvBadge');
+        if (envBadge) envBadge.innerText = data.environment || (data.is_cloud ? 'Render Cloud' : 'Local');
+        const hostInfo = document.getElementById('settingsHostInfo');
+        if (hostInfo) hostInfo.innerText = data.environment || 'Web Service';
+        const regInfo = document.getElementById('settingsRegion');
+        if (regInfo && data.region) regInfo.innerText = data.region;
       } catch (err) {}
     }
 

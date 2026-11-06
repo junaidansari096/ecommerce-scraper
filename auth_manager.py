@@ -17,9 +17,12 @@ from job_manager import ProjectJobManager
 from exporter import ProjectExporter
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-AUTH_DB_PATH = os.path.join(BASE_DIR, "auth.db")
-USER_DATA_ROOT = os.path.join(BASE_DIR, "user_data")
-SECRET_KEY_PATH = os.path.join(BASE_DIR, ".jwt_secret")
+APP_ENV = os.getenv("APP_ENV", "production").lower()
+IS_TESTING = APP_ENV in ("testing", "test", "staging")
+
+AUTH_DB_PATH = os.path.join(BASE_DIR, "auth_test.db" if IS_TESTING else "auth.db")
+USER_DATA_ROOT = os.path.join(BASE_DIR, "user_data_test" if IS_TESTING else "user_data")
+SECRET_KEY_PATH = os.path.join(BASE_DIR, ".jwt_secret_test" if IS_TESTING else ".jwt_secret")
 LEGACY_PROJECTS_DB = os.path.join(BASE_DIR, "projects.db")
 
 def get_or_create_secret_key() -> bytes:
@@ -36,7 +39,7 @@ def get_or_create_secret_key() -> bytes:
             pass
     # Stable deterministic fallback key for cloud ephemeral environments
     # Ensures container restarts and cold-boot wakeups on Render NEVER invalidate user logins
-    stable_default = b"storehub_cloud_jwt_signing_key_production_2025_vault_sec"
+    stable_default = b"storehub_cloud_jwt_signing_key_testing_2025_sec" if IS_TESTING else b"storehub_cloud_jwt_signing_key_production_2025_vault_sec"
     try:
         with open(SECRET_KEY_PATH, "wb") as f:
             f.write(stable_default)

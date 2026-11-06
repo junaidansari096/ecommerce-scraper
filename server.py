@@ -44,9 +44,13 @@ SERVER_START_TIME = time.time()
 @app.get("/api/ping")
 @app.get("/api/health")
 async def ping_health():
+    app_env = os.getenv("APP_ENV", "production").lower()
+    is_testing = app_env in ("testing", "test", "staging")
     return {
         "status": "online",
         "service": "storehub-platform",
+        "environment": "testing" if is_testing else "production",
+        "is_testing": is_testing,
         "timestamp": time.time(),
         "uptime_seconds": int(time.time() - SERVER_START_TIME)
     }
@@ -266,19 +270,27 @@ async def get_network_info(request: Request):
 
     host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
     proto = request.headers.get("x-forwarded-proto") or ("https" if is_render else request.url.scheme)
-    public_url = f"{proto}://{host}" if host else (render_url or f"http://{local_ip}:8000")
+    current_port = int(os.environ.get("PORT", 8000))
+    public_url = f"{proto}://{host}" if host else (render_url or f"http://{local_ip}:{current_port}")
     is_cloud = is_render or "onrender.com" in host
+
+    app_env = os.getenv("APP_ENV", "production" if is_cloud else "testing").lower()
+    is_testing = app_env in ("testing", "test", "staging")
+    env_label = ("Render Cloud (Testing Sandbox)" if is_testing else "Render Cloud Production") if is_cloud else ("Local Testing Sandbox" if is_testing else "Local Production")
 
     return {
         "is_cloud": is_cloud,
-        "environment": "Render Cloud Production" if is_cloud else "Local Development",
+        "is_testing": is_testing,
+        "app_env": app_env,
+        "environment": env_label,
         "public_url": public_url,
         "local_ip": local_ip,
-        "port": 8000,
+        "port": current_port,
         "wifi_url": public_url,
-        "localhost_url": "http://localhost:8000",
+        "localhost_url": f"http://localhost:{current_port}",
         "tunnel_url": status.get("tunnel_url", ""),
-        "db_engine": "SQLite 3 WAL (Isolated User Vaults)",
+        "db_engine": f"SQLite 3 WAL ({'Isolated Test Vault' if is_testing else 'Production Vault'})",
+        "storage_root": "user_data_test/" if is_testing else "user_data/",
         "anti_bot_profile": "Active (Chrome Headless)",
         "region": "Singapore (Southeast Asia) / Global" if is_cloud else "Local Machine"
     }

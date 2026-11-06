@@ -14,7 +14,9 @@ ENV/
 *.db-shm
 *.db-wal
 user_data/
+user_data_test/
 .jwt_secret
+.jwt_secret_test
 
 # Headless Browser Profiles & Caches
 chrome_scraper_profile/

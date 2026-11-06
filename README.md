@@ -84,22 +84,30 @@ cd ecommerce-scraper-app
 pip install -r requirements.txt
 ```
 
-### 3. Launching the Platform
+### 3. Launching the Platform: Dual Environment Architecture
 
-**On Windows:**
-Double-click `run.bat` or run:
-```bash
-python -m uvicorn server:app --host 0.0.0.0 --port 8000 --reload
-```
+The platform provides two strictly segregated environments:
 
-**On Linux / macOS:**
-```bash
-chmod +x run.sh
-./run.sh
-```
+#### 🟢 Production Mode
+- **Port:** 8000
+- **Database:** `auth.db`
+- **Storage:** `user_data/`
+- **Launch Command:**
+  - Windows: Double-click `run_production.bat`
+  - Linux/Mac: `./run_production.sh`
+  - Or: `APP_ENV=production python -m uvicorn server:app --host 0.0.0.0 --port 8000`
 
-Open your browser and navigate to:
-**`http://localhost:8000`**
+#### 🧪 Testing / Staging Sandbox Mode
+- **Port:** 8001
+- **Database:** `auth_test.db` (Separate test users & tokens)
+- **Storage:** `user_data_test/` (All test scrapes are completely isolated)
+- **Launch Command:**
+  - Windows: Double-click `run_testing.bat`
+  - Linux/Mac: `./run_testing.sh`
+  - Or: `APP_ENV=testing python -m uvicorn server:app --host 0.0.0.0 --port 8001 --reload`
+
+> [!NOTE]
+> You can run both Production (Port 8000) and Testing (Port 8001) at the same time on the same machine without any database collisions or file conflicts!
 
 ---
 
